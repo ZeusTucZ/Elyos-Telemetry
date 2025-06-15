@@ -1,4 +1,4 @@
-
+import Speedometer from "../components/Speedometer";
 
 export default function DashboardPage() {
     return (
@@ -8,8 +8,9 @@ export default function DashboardPage() {
                     {/* Left square */}
                     <div className="basis-[50%] m-2 flex flex-row">
                         {/* The following contains the speedometer and the performance data */}
-                        <div className="bg-white basis-[65%] rounded-xl m-1">
+                        <div className="basis-[65%] rounded-xl m-1 flex justify-center items-center">
                             {/* Speedometer */}
+                            <Speedometer />
                         </div>
                         <div className="bg-white basis-[35%] rounded-xl m-1">
                             {/* Performance data */}
