@@ -1,4 +1,5 @@
 import Speedometer from "../components/Speedometer";
+import PerformanceTable from "../components/Performance";
 
 export default function DashboardPage() {
     return (
@@ -12,8 +13,9 @@ export default function DashboardPage() {
                             {/* Speedometer */}
                             <Speedometer />
                         </div>
-                        <div className="bg-white basis-[35%] rounded-xl m-1">
+                        <div className="basis-[35%] rounded-xl m-1">
                             {/* Performance data */}
+                            <PerformanceTable />
                         </div>
                     </div>
 

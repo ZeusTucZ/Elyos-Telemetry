@@ -6,15 +6,20 @@ const Speedometer = ({ maxValue = 80 }) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            fetch("http://localhost:5050/speed")
+            fetch("http://localhost:5050/")
                 .then((res) => res.json())
-                .then((data) => setSpeed(data.speed))
+                .then((data) => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        const latest = data[data.length - 1];
+                        setSpeed(latest.speed);
+                    }
+                })
                 .catch((err) => console.error("Error fetching speed:", err));
         }, 1000);
 
         return () => clearInterval(interval);
     }, []);
-
+ 
     return (
         <ReactSpeedometer 
             value={speed}
