@@ -1,5 +1,6 @@
 import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
+import VoltageCurrentChart from "../components/ConsumptionStats";
 
 export default function DashboardPage() {
     return (
@@ -23,6 +24,7 @@ export default function DashboardPage() {
                         {/* The following contains the consumption stats and the IMU data */}
                         <div className="basis-[65%] bg-white rounded-xl m-1">
                             {/* Consumption Stats */}
+                            <VoltageCurrentChart />
                         </div>
                         <div className="basis-[35%] bg-white rounded-xl m-1">
                             {/* IMU data */}
