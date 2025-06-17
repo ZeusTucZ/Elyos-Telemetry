@@ -2,7 +2,27 @@ import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
 import VoltageCurrentChart from "../components/ConsumptionStats";
 
-export default function DashboardPage() {
+import React, {useState, useEffect} from "react";
+
+const DashboardPage = () => {
+    const [speed, setSpeed] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetch("http://localhost:5050/")
+                .then((res) => res.json())
+                .then((data) => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        const latest = data[data.length - 1];
+                        setSpeed(latest.speed);
+                    }
+                })
+                .catch((err) => console.error("Error fetching speed:", err));
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <>
             <div className="h-[83vh] flex flex-row">
@@ -12,7 +32,7 @@ export default function DashboardPage() {
                         {/* The following contains the speedometer and the performance data */}
                         <div className="basis-[65%] rounded-xl m-1 flex justify-center items-center">
                             {/* Speedometer */}
-                            <Speedometer />
+                            <Speedometer speed={speed}/>
                         </div>
                         <div className="basis-[35%] rounded-xl m-1">
                             {/* Performance data */}
@@ -45,3 +65,5 @@ export default function DashboardPage() {
         </>
     );
 }
+
+export default DashboardPage;

@@ -1,25 +1,6 @@
-import React, { useState, useEffect } from "react";
 import ReactSpeedometer from "react-d3-speedometer";
 
-const Speedometer = ({ maxValue = 80 }) => {
-    const [speed, setSpeed] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetch("http://localhost:5050/")
-                .then((res) => res.json())
-                .then((data) => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        const latest = data[data.length - 1];
-                        setSpeed(latest.speed);
-                    }
-                })
-                .catch((err) => console.error("Error fetching speed:", err));
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
- 
+const Speedometer = ({ speed = 0, maxValue = 80 }) => {
     return (
         <ReactSpeedometer 
             value={speed}
