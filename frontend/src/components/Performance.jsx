@@ -1,34 +1,6 @@
-import React, { useState, useEffect } from "react";
 
-const PerformanceTable = () => {
-    const [current, setCurrent] = useState(0);
-    const [voltage, setVoltage] = useState(0);
-    const [rpms, setRpms] = useState(0);
-    const [totalConsumption, setTotalConsumption] = useState(0);
-    const [efficiency, setEfficiency] = useState(0);
-    const [distance, setDistance] = useState(0);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetch("http://localhost:5050/")
-                .then((res) => res.json())
-                .then((data) => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        const latest = data[data.length - 1];
-                        setCurrent(latest.current);
-                        setVoltage(latest.voltage);
-                        setRpms(latest.rpms);
-                        setTotalConsumption(latest.totalConsumption);
-                        setEfficiency(latest.efficiency);
-                        setDistance(latest.distance);
-                    }
-                })
-                .catch((err) => console.error("Error fetching performance data:", err));
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
+const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption = 0, efficiency = 0, distance = 0 }) => {
     return (
         <div className="bg-[#0A0F1C] text-white p-4 rounded-xl shadow-lg w-full mx-auto h-full">
             <h2 className="text-xl font-semibold text-center">Performance</h2>

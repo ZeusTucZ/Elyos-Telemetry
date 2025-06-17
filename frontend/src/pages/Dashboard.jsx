@@ -6,6 +6,12 @@ import React, {useState, useEffect} from "react";
 
 const DashboardPage = () => {
     const [speed, setSpeed] = useState(0);
+    const [current, setCurrent] = useState(0);
+    const [voltage, setVoltage] = useState(0);
+    const [rpms, setRpms] = useState(0);
+    const [totalConsumption, setTotalConsumption] = useState(0);
+    const [efficiency, setEfficiency] = useState(0);
+    const [distance, setDistance] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -15,9 +21,15 @@ const DashboardPage = () => {
                     if (Array.isArray(data) && data.length > 0) {
                         const latest = data[data.length - 1];
                         setSpeed(latest.speed);
+                        setCurrent(latest.current);
+                        setVoltage(latest.voltage);
+                        setRpms(latest.rpms);
+                        setTotalConsumption(latest.totalConsumption);
+                        setEfficiency(latest.efficiency);
+                        setDistance(latest.distance);
                     }
                 })
-                .catch((err) => console.error("Error fetching speed:", err));
+                .catch((err) => console.error("Error fetching data:", err));
         }, 1000);
 
         return () => clearInterval(interval);
@@ -36,7 +48,7 @@ const DashboardPage = () => {
                         </div>
                         <div className="basis-[35%] rounded-xl m-1">
                             {/* Performance data */}
-                            <PerformanceTable />
+                            <PerformanceTable current={current} voltage={voltage} rpms={rpms} totalConsumption={totalConsumption} efficiency={efficiency} distance={distance}/>
                         </div>
                     </div>
 
