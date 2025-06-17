@@ -12,6 +12,8 @@ const DashboardPage = () => {
     const [totalConsumption, setTotalConsumption] = useState(0);
     const [efficiency, setEfficiency] = useState(0);
     const [distance, setDistance] = useState(0);
+    const [dataHistory, setDataHistory] = useState([]);
+    const [counter, setCounter] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -27,13 +29,22 @@ const DashboardPage = () => {
                         setTotalConsumption(latest.totalConsumption);
                         setEfficiency(latest.efficiency);
                         setDistance(latest.distance);
+
+                        const newEntry = {
+                        id: counter,
+                        voltage: latest.voltage,
+                        current: latest.current,
+                        };
+
+                        setDataHistory((prev) => [...prev.slice(-19), newEntry]);
+                        setCounter((prev) => prev + 1);
                     }
                 })
                 .catch((err) => console.error("Error fetching data:", err));
         }, 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [counter]);
 
     return (
         <>
@@ -56,7 +67,7 @@ const DashboardPage = () => {
                         {/* The following contains the consumption stats and the IMU data */}
                         <div className="basis-[65%] bg-white rounded-xl m-1">
                             {/* Consumption Stats */}
-                            <VoltageCurrentChart />
+                            <VoltageCurrentChart dataHistory={dataHistory}/>
                         </div>
                         <div className="basis-[35%] bg-white rounded-xl m-1">
                             {/* IMU data */}
