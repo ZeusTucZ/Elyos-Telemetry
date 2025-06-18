@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import app from './app.js';
-import pool from './databases/dbConfig.js';
+import pool from './config/dbConfig.js';
 
 // Initiate the enviroment variables
 dotenv.config({ path: './env/.env' });
