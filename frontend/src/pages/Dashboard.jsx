@@ -7,6 +7,7 @@ import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
 import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
+import MapGPS from "../components/MapGPS";
 
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
@@ -29,6 +30,9 @@ const DashboardPage = () => {
   const [accel_x, setAccel_x] = useState(0);
   const [accel_y, setAccel_y] = useState(0);
   const [accel_z, setAccel_z] = useState(0);
+
+  // Map GPS
+  const [position, setPosition] = useState([0, 0]);
 
   useEffect(() => {
     if (!showDashboard) return;
@@ -54,6 +58,10 @@ const DashboardPage = () => {
             setAccel_x(latest.accel_x);
             setAccel_y(latest.accel_y);
             setAccel_z(latest.accel_z);
+
+            if (latest.position && latest.position.lat && latest.position.lng) {
+              setPosition([latest.position.lat, latest.position.lng]);
+            }
 
             const newEntry = {
               id: counter,
@@ -129,7 +137,7 @@ const DashboardPage = () => {
 
             <div className="basis-[40%] bg-[#20233d] m-2 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 rounded-xl bg-white">
-                {/* GPS Map */}
+                <MapGPS position={position}/>
               </div>
               <div className="basis-[50%] m-2 rounded-xl bg-white">
                 {/* Time and race control */}
