@@ -5,11 +5,12 @@ import Landing from "../components/Landing";
 import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
+import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
 
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
-
+  
   const [speed, setSpeed] = useState(0);
   const [current, setCurrent] = useState(0);
   const [voltage, setVoltage] = useState(0);
@@ -73,7 +74,7 @@ const DashboardPage = () => {
             className="min-h-screen flex flex-row bg-[#0A0F1C] text-white z-0 relative"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 3.2, ease: "easeOut" }}
           >
             <div className="basis-[60%] bg-[#20233d] m-2 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
@@ -97,7 +98,7 @@ const DashboardPage = () => {
                   <VoltageCurrentChart dataHistory={dataHistory} />
                 </div>
                 <div className="basis-[35%] bg-white rounded-xl m-1">
-                  {/* IMU Data */}
+                  <IMUdata />
                 </div>
               </div>
             </div>
