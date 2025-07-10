@@ -11,6 +11,7 @@ import VoltageCurrentChart from "../components/ConsumptionStats";
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
   
+  // Performance data
   const [speed, setSpeed] = useState(0);
   const [current, setCurrent] = useState(0);
   const [voltage, setVoltage] = useState(0);
@@ -20,6 +21,14 @@ const DashboardPage = () => {
   const [distance, setDistance] = useState(0);
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
+
+  // IMU data
+  const [roll, setRoll] = useState(0);
+  const [pitch, setPitch] = useState(0);
+  const [yaw, setYaw] = useState(0);
+  const [accel_x, setAccel_x] = useState(0);
+  const [accel_y, setAccel_y] = useState(0);
+  const [accel_z, setAccel_z] = useState(0);
 
   useEffect(() => {
     if (!showDashboard) return;
@@ -37,6 +46,14 @@ const DashboardPage = () => {
             setTotalConsumption(latest.totalConsumption);
             setEfficiency(latest.efficiency);
             setDistance(latest.distance);
+
+            // IMU data
+            setRoll(latest.roll);
+            setPitch(latest.pitch);
+            setYaw(latest.yaw);
+            setAccel_x(latest.accel_x);
+            setAccel_y(latest.accel_y);
+            setAccel_z(latest.accel_z);
 
             const newEntry = {
               id: counter,
@@ -98,7 +115,14 @@ const DashboardPage = () => {
                   <VoltageCurrentChart dataHistory={dataHistory} />
                 </div>
                 <div className="basis-[35%] bg-white rounded-xl m-1">
-                  <IMUdata />
+                  <IMUdata 
+                    roll={roll}
+                    pitch={pitch}
+                    yaw={yaw}
+                    accel_x={accel_x}
+                    accel_y={accel_y}
+                    accel_z={accel_z}
+                  />
                 </div>
               </div>
             </div>
