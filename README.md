@@ -55,5 +55,9 @@ Released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## 🖼️ Screenshots
 
+### 📈 Dashboard
+
+![Dashboard Screenshot](./images/Dashboard.png)
+
 ---
 
