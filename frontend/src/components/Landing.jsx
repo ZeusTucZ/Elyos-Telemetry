@@ -11,7 +11,7 @@ const Landing = ({ onFinish }) => {
         opacity: 0,
         transition: { duration: 2.5, ease: "easeInOut" },
       });
-      onFinish(); // Avisar que terminó la animación
+      onFinish(); // This calls that the animation have finished
     };
     sequence();
   }, [controls, onFinish]);
