@@ -6,6 +6,7 @@ import lectureRoutes from "./routes/LectureRoutes.js";
 import pilotRoutes from "./routes/PilotRoutes.js";
 import configurationRoutes from "./routes/ConfigurationRoutes.js";
 import sessionRoutes from "./routes/SessionRoutes.js";
+import lapRoutes from "./routes/LapsRoutes.js";
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use('/api/lectures', lectureRoutes);
 app.use('/api/pilots', pilotRoutes);
 app.use('/api/configurations', configurationRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/laps', lapRoutes);
 
 export default app;
