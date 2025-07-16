@@ -23,16 +23,21 @@ const createTables = async () => {
         console.log("Connected to PostgreSQL");
 
         const query = `
+            DROP TABLE IF EXISTS lectures;
+            DROP TABLE IF EXISTS sessions;
+            DROP TABLE IF EXISTS configurations;
+            DROP TABLE IF EXISTS pilots;
+
             CREATE TABLE IF NOT EXISTS pilots (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
+                name VARCHAR(100),
                 weight NUMERIC(4,2) CHECK (weight > 0)
             );
 
             CREATE TABLE IF NOT EXISTS configurations (
                 id SERIAL PRIMARY KEY,
-                name_config VARCHAR(100) NOT NULL,
-                creation_date DATE NOT NULL,
+                name_config VARCHAR(100),
+                creation_date DATE,
                 motor VARCHAR(100),
                 tire_pressure NUMERIC(5,2),
                 tire_type VARCHAR(50),
@@ -42,16 +47,16 @@ const createTables = async () => {
 
             CREATE TABLE IF NOT EXISTS sessions (
                 id SERIAL PRIMARY KEY,
-                pilot_id INTEGER NOT NULL REFERENCES pilots(id) ON DELETE CASCADE,
-                date DATE NOT NULL,
-                duration INTERVAL NOT NULL,
+                pilot_id INTEGER REFERENCES pilots(id) ON DELETE CASCADE,
+                date DATE,
+                duration INTERVAL,
                 description TEXT
             );
 
             CREATE TABLE IF NOT EXISTS lectures (
                 id SERIAL PRIMARY KEY,
-                session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-                timestamp TIMESTAMPTZ NOT NULL,
+                session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
+                timestamp TIMESTAMPTZ,
                 voltage_battery NUMERIC(6,2),
                 current NUMERIC(6,2),
                 latitude DOUBLE PRECISION,

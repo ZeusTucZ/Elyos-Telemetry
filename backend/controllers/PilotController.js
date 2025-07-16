@@ -1,5 +1,7 @@
 import pool from '../config/dbConfig.js';
 
+const toNull = (v) => v !== undefined ? v : null;
+
 // Get all pilots
 export const getAllPilots = async (req ,res) => {
     try {
@@ -39,7 +41,7 @@ export const createPilot = async (req, res) => {
              $1, $2
             ) RETURNING *`,
             [
-                name, weight
+                toNull(name), toNull(weight)
             ]
         );
         res.status(201).json(result.rows[0]);
@@ -59,10 +61,12 @@ export const updatePilot = async (req, res) => {
     try {
         const result = await pool.query(
             `UPDATE pilots SET name = $1, weight = $2 WHERE id = $3 RETURNING *`,
-            [name, weight, id]
+            [
+                toNull(name), toNull(weight), id
+            ]
         );
 
-        res.json(result.rows[0]);
+        res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error updating pilot values' });

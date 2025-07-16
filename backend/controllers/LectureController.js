@@ -1,5 +1,7 @@
 import pool from '../config/dbConfig.js';
 
+const toNull = (v) => v !== undefined ? v : null;
+
 export const getAllLectures = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM lectures ORDER BY timestamp');
@@ -68,13 +70,14 @@ export const createLecture = async (req, res) => {
         $13, $14, $15, $16, $17
       ) RETURNING *`,
       [
-        session_id, timestamp, voltage_battery, current, latitude, longitude,
-        acceleration_x, acceleration_y, acceleration_z,
-        orientation_x, orientation_y, orientation_z,
-        rpm_motor, velocity_x, velocity_y, ambient_temp, steering_direction
+        toNull(session_id), timestamp, toNull(voltage_battery), toNull(current), toNull(latitude), toNull(longitude),
+        toNull(acceleration_x), toNull(acceleration_y), toNull(acceleration_z),
+        toNull(orientation_x), toNull(orientation_y), toNull(orientation_z),
+        toNull(rpm_motor), toNull(velocity_x), toNull(velocity_y), toNull(ambient_temp), toNull(steering_direction)
       ]
     );
     res.status(201).json(result.rows[0]);
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error creating lecture' });

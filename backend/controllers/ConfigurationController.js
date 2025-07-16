@@ -1,5 +1,7 @@
 import pool from "../config/dbConfig.js";
 
+const toNull = (v) => v !== undefined ? v : null;
+
 // Get all configurations
 export const getAllConfigurations = async (req, res) => {
     try {
@@ -57,12 +59,12 @@ export const createConfiguration = async (req, res) => {
              $1, NOW(), $2, $3, $4, $5, $6
             ) RETURNING *`,
              [
-                name_config,
-                motor,
-                tire_pressure,
-                tire_type,
-                total_weight,
-                other_parameters
+                toNull(name_config),
+                toNull(motor),
+                toNull(tire_pressure),
+                toNull(tire_type),
+                toNull(total_weight),
+                toNull(other_parameters)
              ]
         )
 
@@ -97,12 +99,12 @@ export const updateConfiguration = async (req, res) => {
             WHERE id = $7
             RETURNING *`,
             [
-                name_config,
-                motor,
-                tire_pressure,
-                tire_type,
-                total_weight,
-                other_parameters,
+                toNull(name_config),
+                toNull(motor),
+                toNull(tire_pressure),
+                toNull(tire_type),
+                toNull(total_weight),
+                toNull(other_parameters),
                 id
             ]
         );
@@ -111,7 +113,7 @@ export const updateConfiguration = async (req, res) => {
             return res.status(404).json({ error: 'Configuration not found' });
         }
 
-        res.json(result.rows[0]);
+        res.status(201).json(result.rows[0]);
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Error updating the configuration' })
