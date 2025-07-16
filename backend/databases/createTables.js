@@ -27,6 +27,7 @@ const createTables = async () => {
             DROP TABLE IF EXISTS sessions;
             DROP TABLE IF EXISTS configurations;
             DROP TABLE IF EXISTS pilots;
+            DROP TABLE IF EXISTS laps;
 
             CREATE TABLE IF NOT EXISTS pilots (
                 id SERIAL PRIMARY KEY,
@@ -72,6 +73,14 @@ const createTables = async () => {
                 velocity_y NUMERIC(6,2),
                 ambient_temp NUMERIC(5,2),
                 steering_direction NUMERIC(6,2)
+            );
+
+            CREATE TABLE IF NOT EXISTS laps (
+                id SERIAL PRIMARY KEY,
+                session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
+                lap_number INTEGER,
+                start_time TIMESTAMPTZ,
+                end_time TIMESTAMPTZ
             );
             `;
 
