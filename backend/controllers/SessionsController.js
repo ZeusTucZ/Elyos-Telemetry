@@ -1,5 +1,7 @@
 import pool from '../config/dbConfig.js';
 
+const toNull = (v) => v !== undefined ? v : null;
+
 // Create session
 export const createSession = async (req, res) => {
     const {
@@ -18,7 +20,9 @@ export const createSession = async (req, res) => {
             ) VALUES (
              $1, NOW(), $2, $3
             ) RETURNING *`,
-            [pilot_id, duration, description]
+            [
+                toNull(pilot_id), toNull(duration), toNull(description)
+            ]
         )
 
         res.status(201).json(result.rows[0]);
