@@ -1,6 +1,6 @@
 
 
-const RaceStats = ({ running_time = 0, average_time = 0, target_time = 0 }) => {
+const RaceStats = ({ onStart, onReset, running_time = 0, average_time = 0, target_time = 0 }) => {
     return (
         <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-row'>
             <div class="basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-1">
@@ -28,9 +28,9 @@ const RaceStats = ({ running_time = 0, average_time = 0, target_time = 0 }) => {
                 <h2 className="text-xl font-semibold text-center m-4">Race Progress</h2>
             </div>
             <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-4 shadow-lg m-1">
-                <button className="bg-[#A6A8B2] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
+                <button onClick={onStart} className="bg-[#A6A8B2] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
                 <button className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
-                <button className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
+                <button onClick={onReset} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
             </div>
         </div>
     )

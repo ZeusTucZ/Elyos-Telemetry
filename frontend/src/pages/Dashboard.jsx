@@ -12,6 +12,7 @@ import RaceStats from "../components/RaceStats";
 
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
   const [speed, setSpeed] = useState(0);
@@ -36,7 +37,7 @@ const DashboardPage = () => {
   const [position, setPosition] = useState([0, 0]);
 
   useEffect(() => {
-    if (!showDashboard) return;
+    if (!showDashboard || !isRunning) return;
 
     const interval = setInterval(() => {
       fetch("http://localhost:5050/")
@@ -78,7 +79,7 @@ const DashboardPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [counter, showDashboard]);
+  }, [counter, showDashboard, isRunning]);
 
   return (
     <div className="relative">
@@ -141,7 +142,10 @@ const DashboardPage = () => {
                 <MapGPS position={position}/>
               </div>
               <div className="basis-[50%] rounded-xl">
-                <RaceStats />
+                <RaceStats 
+                onStart={() => setIsRunning(true)}
+                onReset={() => setIsRunning(false)}
+                />
               </div>
             </div>
           </motion.div>

@@ -2,7 +2,7 @@ import express from "express";
 const app = express();
 const PORT = 5050;
 
-const cors = require("cors");
+import cors from "cors";
 app.use(cors());
 
 // Simulated variables
