@@ -6,7 +6,7 @@ const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption
             <h2 className="text-xl font-semibold text-center mb-4">Performance</h2>
             <table className="w-full text-left table-auto">
                 <thead>
-                <tr className="border-b border-gray-600">
+                <tr className="border-b border-gray-60">
                     <th className="py-1 w-1/2 text-left">Metric</th>
                     <th className="py-1 w-1/2 text-left">Value</th>
                 </tr>

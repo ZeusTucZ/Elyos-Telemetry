@@ -8,6 +8,7 @@ import PerformanceTable from "../components/Performance";
 import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
 import MapGPS from "../components/MapGPS";
+import RaceStats from "../components/RaceStats";
 
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
@@ -136,11 +137,11 @@ const DashboardPage = () => {
             </div>
 
             <div className="basis-[40%] bg-[#20233d] m-2 rounded-xl flex flex-col">
-              <div className="basis-[50%] m-2 rounded-xl bg-white">
+              <div className="basis-[50%] rounded-xl bg-white">
                 <MapGPS position={position}/>
               </div>
-              <div className="basis-[50%] m-2 rounded-xl bg-white">
-                {/* Time and race control */}
+              <div className="basis-[50%] rounded-xl">
+                <RaceStats />
               </div>
             </div>
           </motion.div>
