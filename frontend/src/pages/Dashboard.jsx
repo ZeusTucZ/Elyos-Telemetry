@@ -9,6 +9,7 @@ import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
 import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
+import Battery from "../components/Battery";
 
 const DashboardPage = () => {
   const [showDashboard, setShowDashboard] = useState(false);
@@ -103,7 +104,11 @@ const DashboardPage = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 3.2, ease: "easeOut" }}
           >
-            <div className="basis-[60%] bg-[#20233d] m-2 rounded-xl flex flex-col">
+            <div className="basis-[4%] bg-white m-1 rounded-xl">
+              {/* Baterry */}
+              <Battery percentage={100} />
+            </div>
+            <div className="basis-[44%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
                 <div className="basis-[65%] rounded-xl m-1 flex justify-center items-center">
                   <Speedometer speed={speed} />
@@ -137,7 +142,7 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="basis-[40%] bg-[#20233d] m-2 rounded-xl flex flex-col">
+            <div className="basis-[52%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] rounded-xl bg-white">
                 <MapGPS position={position}/>
               </div>
