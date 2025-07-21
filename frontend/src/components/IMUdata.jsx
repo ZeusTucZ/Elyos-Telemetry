@@ -32,15 +32,15 @@ const IMUdata = ({ roll = 0, pitch = 0, yaw = 0, accel_x = 0, accel_y = 0, accel
                 <tbody>
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Accel_x</td>
-                    <td className="py-1">{accel_x} Wh</td>
+                    <td className="py-1">{accel_x} m/s2</td>
                 </tr>
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Accel_y</td>
-                    <td className="py-1">{accel_y} km/kWh</td>
+                    <td className="py-1">{accel_y} m/s2</td>
                 </tr>
                 <tr>
                     <td className="py-1">Accel_z</td>
-                    <td className="py-1">{accel_z} km</td>
+                    <td className="py-1">{accel_z} m/s2</td>
                 </tr>
                 </tbody>
             </table>

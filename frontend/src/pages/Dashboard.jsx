@@ -108,12 +108,12 @@ const DashboardPage = () => {
               {/* Baterry */}
               <Battery percentage={100} />
             </div>
-            <div className="basis-[44%] bg-[#20233d] m-1 rounded-xl flex flex-col">
+            <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
-                <div className="basis-[65%] rounded-xl m-1 flex justify-center items-center">
+                <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
                   <Speedometer speed={speed} />
                 </div>
-                <div className="basis-[35%] rounded-xl m-1">
+                <div className="basis-[40%] rounded-xl m-1">
                   <PerformanceTable
                     current={current}
                     voltage={voltage}
@@ -125,7 +125,7 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              <div className="basis-[50%] m-2 rounded-xl flex flex-row">
+              <div className="basis-[30%] m-2 rounded-xl flex flex-row">
                 <div className="basis-[65%] bg-white rounded-xl m-1">
                   <VoltageCurrentChart dataHistory={dataHistory} />
                 </div>
