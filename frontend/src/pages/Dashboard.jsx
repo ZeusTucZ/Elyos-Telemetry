@@ -12,6 +12,26 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
+  const handleStart = async () => {
+    setIsRunning(true);
+    try {
+      await fetch('http://localhost:5050/api/record/start', { method: 'POST' });
+    } catch (err) {
+      console.log(err);
+      alert("Error. Failed start button. Is the backend running?")
+    }
+  }
+
+  const handleReset = async () => {
+    setIsRunning(false);
+    try {
+      await fetch('http://localhost:5050/api/record/reset', { method: 'POST' });
+    } catch (err) {
+      console.log(err);
+      alert("Error. Failed reset button. Is the backend running?")
+    }
+  }
+
   const [showDashboard, setShowDashboard] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   
@@ -148,8 +168,8 @@ const DashboardPage = () => {
               </div>
               <div className="basis-[50%] rounded-xl">
                 <RaceStats 
-                onStart={() => setIsRunning(true)}
-                onReset={() => setIsRunning(false)}
+                onStart={handleStart}
+                onReset={handleReset}
                 />
               </div>
             </div>
