@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+import Swal from 'sweetalert2';
+
 import Landing from "../components/Landing";
 import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
@@ -13,24 +15,63 @@ import Battery from "../components/Battery";
 
 const DashboardPage = () => {
   const handleStart = async () => {
-    setIsRunning(true);
     try {
       await fetch('http://localhost:5050/api/record/start', { method: 'POST' });
+      setIsRunning(true);
+      setTimerActive(true);
     } catch (err) {
       console.log(err);
       alert("Error. Failed start button. Is the backend running?")
     }
   }
 
+  const handleReset = async () => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'You will lose all session lectures',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reset it!',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsRunning(false);
+    setRunningTime(0);
+    setTimerActive(false);
+
+    try {
+      await fetch('http://localhost:5050/api/record/start', { method: 'POST' });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const handlePause = async () => {
     setIsRunning(false);
     try {
       await fetch('http://localhost:5050/api/record/pause', { method: 'POST' });
+      setTimerActive(false)
     } catch (err) {
       console.log(err);
       alert("Error. Failed pause button. Is the backend running?")
     }
   }
+
+  const [runningTime, setRunningTime] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+
+  // Count the time
+  useEffect(() => {
+    let interval = null;
+    if (timerActive) {
+      interval = setInterval(() => {
+        setRunningTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive]);
 
   const [showDashboard, setShowDashboard] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -169,7 +210,9 @@ const DashboardPage = () => {
               <div className="basis-[50%] rounded-xl">
                 <RaceStats 
                 onStart={handleStart}
-                onReset={handlePause}
+                onPause={handlePause}
+                onReset={handleReset}
+                running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
                 />
               </div>
             </div>
