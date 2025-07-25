@@ -22,13 +22,13 @@ const DashboardPage = () => {
     }
   }
 
-  const handleReset = async () => {
+  const handlePause = async () => {
     setIsRunning(false);
     try {
-      await fetch('http://localhost:5050/api/record/reset', { method: 'POST' });
+      await fetch('http://localhost:5050/api/record/pause', { method: 'POST' });
     } catch (err) {
       console.log(err);
-      alert("Error. Failed reset button. Is the backend running?")
+      alert("Error. Failed pause button. Is the backend running?")
     }
   }
 
@@ -169,7 +169,7 @@ const DashboardPage = () => {
               <div className="basis-[50%] rounded-xl">
                 <RaceStats 
                 onStart={handleStart}
-                onReset={handleReset}
+                onReset={handlePause}
                 />
               </div>
             </div>
