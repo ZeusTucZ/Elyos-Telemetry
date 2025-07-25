@@ -4,10 +4,15 @@ import 'leaflet/dist/leaflet.css';
 import MapUpdater from './MapUpdater';
 
 const carIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/130/130276.png',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-  popupAnchor: [0, -20],
+  iconUrl:
+    'data:image/svg+xml;base64,' +
+    btoa(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+         <circle cx="8" cy="8" r="6" fill="red" />
+       </svg>`
+    ),
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
 });
 
 const MapGPS = ({ position = [0, 0] }) => {
