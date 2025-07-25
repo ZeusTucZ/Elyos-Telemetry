@@ -32,6 +32,7 @@ const RaceStats = ({ onStart, onPause, onReset, running_time = 0, average_time =
                 <button className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
                 <button onClick={onPause} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Pause</button>
                 <button onClick={onReset} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
+                <button className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
             </div>
         </div>
     )
