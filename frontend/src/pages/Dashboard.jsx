@@ -42,7 +42,7 @@ const DashboardPage = () => {
     setTimerActive(false);
 
     try {
-      await fetch('http://localhost:5050/api/record/start', { method: 'POST' });
+      await fetch('http://localhost:5050/api/record/reset', { method: 'POST' });
     } catch (err) {
       console.log(err);
     }
