@@ -3,7 +3,7 @@ import {
     startRecording,
     stopRecording,
     statusRecording
-} from '../controllers/recordController.js';
+} from '../controllers/RecordController.js';
 
 const router = Router();
 

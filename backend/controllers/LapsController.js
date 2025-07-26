@@ -29,7 +29,7 @@ export const endLap = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await client.query(
+        const result = await pool.query(
         `UPDATE laps SET end_time = $1 WHERE id = $2 RETURNING *`,
         [end_time, id]
         );
@@ -44,7 +44,7 @@ export const getAllLaps = async (req, res) => {
     const { session_id } = req.params;
 
     try {
-        const result = await client.query(
+        const result = await pool.query(
         `SELECT * FROM laps WHERE session_id = $1 ORDER BY lap_number ASC`,
         [session_id]
         );

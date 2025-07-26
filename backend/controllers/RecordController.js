@@ -1,5 +1,5 @@
 import express from 'express';
-import { setIsRunning, getIsRunning } from '../isRunning';
+import { setIsRunning, getIsRunning } from '../isRunning.js';
 
 // Start recording
 export const startRecording = async (req, res) => {
