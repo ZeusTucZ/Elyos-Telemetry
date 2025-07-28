@@ -16,7 +16,7 @@ import Battery from "../components/Battery";
 const DashboardPage = () => {
   const handleStart = async () => {
     try {
-      await fetch('http://localhost:3000/api/record/start', { method: 'POST' });
+      await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
       setIsRunning(true);
       setTimerActive(true);
     } catch (err) {
@@ -42,7 +42,7 @@ const DashboardPage = () => {
     setTimerActive(false);
 
     try {
-      await fetch('http://localhost:3000/api/record/reset', { method: 'POST' });
+      await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
     } catch (err) {
       console.log(err);
     }
@@ -51,7 +51,7 @@ const DashboardPage = () => {
   const handlePause = async () => {
     setIsRunning(false);
     try {
-      await fetch('http://localhost:3000/api/record/pause', { method: 'POST' });
+      await fetch('http://localhost:4999/api/record/pause', { method: 'POST' });
       setTimerActive(false)
     } catch (err) {
       console.log(err);
