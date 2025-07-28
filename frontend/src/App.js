@@ -1,10 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import DashboardPage from './pages/Dashboard';
-import SessionsPage from './pages/Sessions';
-import PilotsPage from './pages/Pilots';
-import SettingsPage from './pages/Settings';
+import DashboardPage from './pages/Dashboard.jsx';
+import SessionsPage from './pages/Sessions.jsx';
+import PilotsPage from './pages/Pilots.jsx';
+import SettingsPage from './pages/Settings.jsx';
 
 function App() {
   return (
