@@ -85,7 +85,6 @@ const DashboardPage = () => {
   const [ambient_temp, setambient_temp] = useState(0);
   const [totalConsumption, setTotalConsumption] = useState(0); // ?
   const [efficiency, setEfficiency] = useState(0); // ?
-  const [distance, setDistance] = useState(0); // ?
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
 
@@ -95,7 +94,6 @@ const DashboardPage = () => {
   const [yaw, setYaw] = useState(0);
   const [acceleration_x, setAccel_x] = useState(0);
   const [acceleration_y, setAccel_y] = useState(0);
-  const [acceleration_z, setAccel_z] = useState(0);
 
   // Map GPS
   const [latitude, setLatitud] = useState(0);
@@ -117,7 +115,6 @@ const DashboardPage = () => {
             setRpms(latest.rpms);
             setTotalConsumption(latest.totalConsumption);
             setEfficiency(latest.efficiency);
-            setDistance(latest.distance);
             setambient_temp(latest.ambient_temp);
             setLatitud(latest.latitude);
             setLongitud(latest.longitud);
@@ -128,7 +125,6 @@ const DashboardPage = () => {
             setYaw(latest.yaw);
             setAccel_x(latest.acceleration_x);
             setAccel_y(latest.acceleration_y);
-            setAccel_z(latest.accelerationg_z);
 
             const newEntry = {
               id: counter,
@@ -170,7 +166,7 @@ const DashboardPage = () => {
           >
             <div className="basis-[4%] bg-white m-1 rounded-xl">
               {/* Baterry */}
-              <Battery percentage={100} />
+              <Battery percentage={4 * voltage_battery} />
             </div>
             <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
@@ -181,10 +177,10 @@ const DashboardPage = () => {
                   <PerformanceTable
                     current={current}
                     voltage={voltage_battery}
-                    rpms={rpm_motor}
+                    rpms={rpm_motor * Math.PI * 0.5588}
                     totalConsumption={totalConsumption}
                     efficiency={efficiency}
-                    distance={distance}
+                    distance={rpm_motor}
                     ambient_temp={ambient_temp}
                   />
                 </div>
@@ -201,7 +197,6 @@ const DashboardPage = () => {
                     yaw={yaw}
                     accel_x={acceleration_x}
                     accel_y={acceleration_y}
-                    accel_z={acceleration_z}
                   />
                 </div>
               </div>
