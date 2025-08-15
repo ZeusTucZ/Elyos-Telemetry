@@ -1,6 +1,6 @@
 
 
-const IMUdata = ({ roll = 0, pitch = 0, yaw = 0, accel_x = 0, accel_y = 0, accel_z = 0 }) => {
+const IMUdata = ({ roll = 0, pitch = 0, yaw = 0, accel_x = 0, accel_y = 0}) => {
     return (
         <div className="bg-[#0A0F1C] text-white p-4 rounded-xl shadow-lg w-full mx-auto h-full">
             <h2 className="text-xl font-semibold text-center mb-4">IMU DATA</h2>
@@ -37,10 +37,6 @@ const IMUdata = ({ roll = 0, pitch = 0, yaw = 0, accel_x = 0, accel_y = 0, accel
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Accel_y</td>
                     <td className="py-1">{accel_y} m/s2</td>
-                </tr>
-                <tr>
-                    <td className="py-1">Accel_z</td>
-                    <td className="py-1">{accel_z} m/s2</td>
                 </tr>
                 </tbody>
             </table>
