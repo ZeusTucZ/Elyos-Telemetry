@@ -77,13 +77,14 @@ const DashboardPage = () => {
   const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
-  const [speed, setSpeed] = useState(0);
+  const [velocity_x, setVelocity_x] = useState(0);
+  const [velocity_y, setVelocity_y] = useState(0);
   const [current, setCurrent] = useState(0);
-  const [voltage, setVoltage] = useState(0);
-  const [rpms, setRpms] = useState(0);
-  const [totalConsumption, setTotalConsumption] = useState(0);
-  const [efficiency, setEfficiency] = useState(0);
-  const [distance, setDistance] = useState(0);
+  const [voltage_battery, setVoltage] = useState(0);
+  const [rpm_motor, setRpms] = useState(0);
+  const [ambient_temp, setambient_temp] = useState(0);
+  const [totalConsumption, setTotalConsumption] = useState(0); // ?
+  const [efficiency, setEfficiency] = useState(0); // ?
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
 
@@ -91,45 +92,43 @@ const DashboardPage = () => {
   const [roll, setRoll] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [yaw, setYaw] = useState(0);
-  const [accel_x, setAccel_x] = useState(0);
-  const [accel_y, setAccel_y] = useState(0);
-  const [accel_z, setAccel_z] = useState(0);
+  const [acceleration_x, setAccel_x] = useState(0);
+  const [acceleration_y, setAccel_y] = useState(0);
 
   // Map GPS
-  const [position, setPosition] = useState([0, 0]);
+  const [latitude, setLatitud] = useState(0);
+  const [longitud, setLongitud] = useState(0);
 
   useEffect(() => {
     if (!showDashboard || !isRunning) return;
 
     const interval = setInterval(() => {
-      fetch("http://localhost:5050/")
+      fetch("http://localhost:4999/api/lectures")
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const latest = data[data.length - 1];
-            setSpeed(latest.speed);
+            setVelocity_x(latest.velocity_x);
+            setVelocity_y(latest.velocity_y);
             setCurrent(latest.current);
-            setVoltage(latest.voltage);
+            setVoltage(latest.voltage_battery);
             setRpms(latest.rpms);
             setTotalConsumption(latest.totalConsumption);
             setEfficiency(latest.efficiency);
-            setDistance(latest.distance);
+            setambient_temp(latest.ambient_temp);
+            setLatitud(latest.latitude);
+            setLongitud(latest.longitud);
 
             // IMU data
             setRoll(latest.roll);
             setPitch(latest.pitch);
             setYaw(latest.yaw);
-            setAccel_x(latest.accel_x);
-            setAccel_y(latest.accel_y);
-            setAccel_z(latest.accel_z);
-
-            if (latest.position && latest.position.lat && latest.position.lng) {
-              setPosition([latest.position.lat, latest.position.lng]);
-            }
+            setAccel_x(latest.acceleration_x);
+            setAccel_y(latest.acceleration_y);
 
             const newEntry = {
               id: counter,
-              voltage: latest.voltage,
+              voltage: latest.voltage_battery,
               current: latest.current,
             };
 
@@ -167,21 +166,22 @@ const DashboardPage = () => {
           >
             <div className="basis-[4%] bg-white m-1 rounded-xl">
               {/* Baterry */}
-              <Battery percentage={100} />
+              <Battery percentage={4 * voltage_battery} />
             </div>
             <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
                 <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
-                  <Speedometer speed={speed} />
+                  <Speedometer speed={Math.sqrt((velocity_x)^2 + (velocity_y)^2)} />
                 </div>
                 <div className="basis-[40%] rounded-xl m-1">
                   <PerformanceTable
                     current={current}
-                    voltage={voltage}
-                    rpms={rpms}
+                    voltage={voltage_battery}
+                    rpms={rpm_motor * Math.PI * 0.5588}
                     totalConsumption={totalConsumption}
                     efficiency={efficiency}
-                    distance={distance}
+                    distance={rpm_motor}
+                    ambient_temp={ambient_temp}
                   />
                 </div>
               </div>
@@ -195,9 +195,8 @@ const DashboardPage = () => {
                     roll={roll}
                     pitch={pitch}
                     yaw={yaw}
-                    accel_x={accel_x}
-                    accel_y={accel_y}
-                    accel_z={accel_z}
+                    accel_x={acceleration_x}
+                    accel_y={acceleration_y}
                   />
                 </div>
               </div>
@@ -205,7 +204,7 @@ const DashboardPage = () => {
 
             <div className="basis-[52%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] rounded-xl bg-white">
-                <MapGPS position={position}/>
+                <MapGPS latitude={latitude} longitud={longitud}/>
               </div>
               <div className="basis-[50%] rounded-xl">
                 <RaceStats 
