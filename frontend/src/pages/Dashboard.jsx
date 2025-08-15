@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import Swal from 'sweetalert2';
 
 import Landing from "../components/Landing";
-import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
 import IMUdata from "../components/IMUdata";
@@ -14,6 +13,16 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
+  // Solo muestra el landing si no se ha mostrado antes
+  const [showDashboard, setShowDashboard] = useState(() => {
+    return localStorage.getItem("elyosLandingShown") === "true";
+  });
+
+  const handleLandingFinish = () => {
+    setShowDashboard(true);
+    localStorage.setItem("elyosLandingShown", "true");
+  };
+
   const handleStart = async () => {
     try {
       await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
@@ -73,7 +82,6 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [timerActive]);
 
-  const [showDashboard, setShowDashboard] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
@@ -145,19 +153,10 @@ const DashboardPage = () => {
 
   return (
     <div className="relative">
-      {!showDashboard && <Landing onFinish={() => setShowDashboard(true)} />}
+      {!showDashboard && <Landing onFinish={handleLandingFinish} />}
 
       {showDashboard && (
         <>
-          {/* Fade-in NavigationBar */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <NavigationBar />
-          </motion.div>
-
           {/* Fade-in Dashboard */}
           <motion.div
             className="min-h-screen flex flex-row bg-[#0A0F1C] text-white z-0 relative"

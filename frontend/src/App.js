@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
+import NavigationBar from './components/NavigationBar.jsx'; // <-- Agrega esta línea
 import DashboardPage from './pages/Dashboard.jsx';
 import SessionsPage from './pages/Sessions.jsx';
 import PilotsPage from './pages/Pilots.jsx';
@@ -9,6 +10,7 @@ import SettingsPage from './pages/Settings.jsx';
 function App() {
   return (
     <div className="bg-[#0A0F1C] min-h-screen">
+      <NavigationBar /> {/* <-- Agrega esto aquí */}
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/sessions" element={<SessionsPage />} />
