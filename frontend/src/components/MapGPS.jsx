@@ -15,18 +15,18 @@ const carIcon = new L.Icon({
   iconAnchor: [8, 8],
 });
 
-const MapGPS = ({ position = [0, 0] }) => {
+const MapGPS = ({ latitude = 0, longitud = 0 }) => {
   return (
     <div className="w-full h-96 rounded-xl overflow-hidden">
-      <MapContainer center={position} zoom={17} className="w-full h-full">
+      <MapContainer center={[latitude, longitud]} zoom={17} className="w-full h-full">
         {/* Este componente mueve el mapa cuando cambia la posición */}
-        <MapUpdater position={position} />
+        <MapUpdater position={[latitude, longitud]} />
 
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={position} icon={carIcon}>
+        <Marker position={[latitude, longitud]} icon={carIcon}>
           <Popup>Position of the car</Popup>
         </Marker>
       </MapContainer>

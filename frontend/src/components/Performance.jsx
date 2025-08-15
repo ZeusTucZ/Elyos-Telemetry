@@ -1,6 +1,6 @@
 
 
-const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption = 0, efficiency = 0, distance = 0 }) => {
+const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption = 0, efficiency = 0, distance = 0, ambient_temp = 0}) => {
     return (
         <div className="bg-[#0A0F1C] text-white p-4 rounded-xl shadow-lg w-full mx-auto h-full">
             <h2 className="text-xl font-semibold text-center mb-4">Performance</h2>
