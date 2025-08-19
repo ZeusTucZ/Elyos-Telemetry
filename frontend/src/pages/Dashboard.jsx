@@ -83,8 +83,6 @@ const DashboardPage = () => {
   const [voltage_battery, setVoltage] = useState(0);
   const [rpm_motor, setRpms] = useState(0);
   const [ambient_temp, setambient_temp] = useState(0);
-  const [totalConsumption, setTotalConsumption] = useState(0); // ?
-  const [efficiency, setEfficiency] = useState(0); // ?
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
 
@@ -111,10 +109,8 @@ const DashboardPage = () => {
             setVelocity_x(latest.velocity_x);
             setVelocity_y(latest.velocity_y);
             setCurrent(latest.current);
-            setVoltage(latest.voltage_battery);
+            setVoltage(latest.voltage);
             setRpms(latest.rpms);
-            setTotalConsumption(latest.totalConsumption);
-            setEfficiency(latest.efficiency);
             setambient_temp(latest.ambient_temp);
             setLatitud(latest.latitude);
             setLongitud(latest.longitud);
@@ -128,7 +124,7 @@ const DashboardPage = () => {
 
             const newEntry = {
               id: counter,
-              voltage: latest.voltage_battery,
+              voltage: latest.voltage,
               current: latest.current,
             };
 
@@ -171,16 +167,16 @@ const DashboardPage = () => {
             <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
                 <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
-                  <Speedometer speed={Math.sqrt((velocity_x)^2 + (velocity_y)^2)} />
+                  <Speedometer speed={Math.sqrt((velocity_x ** 2) + (velocity_y ** 2))} />
                 </div>
                 <div className="basis-[40%] rounded-xl m-1">
                   <PerformanceTable
                     current={current}
                     voltage={voltage_battery}
-                    rpms={rpm_motor * Math.PI * 0.5588}
-                    totalConsumption={totalConsumption}
-                    efficiency={efficiency}
-                    distance={rpm_motor}
+                    rpms={rpm_motor}
+                    totalConsumption={0}
+                    efficiency={0}
+                    distance={(rpm_motor * Math.PI * 0.5588).toFixed(2)}
                     ambient_temp={ambient_temp}
                   />
                 </div>
