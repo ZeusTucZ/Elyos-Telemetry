@@ -12,7 +12,7 @@ const NavigationBar = () => {
 
                 <div className="flex space-x-6 text-lg">
                 <Link to="/dashboard" className="hover:text-gray-400">Dashboard</Link>
-                <Link to="/sesiones" className="hover:text-gray-400">Sesions</Link>
+                <Link to="/sesiones" className="hover:text-gray-400">Sessions</Link>
                 <Link to="/pilotos" className="hover:text-gray-400">Pilots</Link>
                 <Link to="/configuraciones" className="hover:text-gray-400">Configurations</Link>
                 </div>
