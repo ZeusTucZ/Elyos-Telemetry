@@ -40,6 +40,8 @@ const DashboardPage = () => {
     setIsRunning(false);
     setRunningTime(0);
     setTimerActive(false);
+    setLaps([]);
+    setLapStartTime(0);
 
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
