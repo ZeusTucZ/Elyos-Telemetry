@@ -48,6 +48,15 @@ const DashboardPage = () => {
     }
   };
 
+  const [laps, setLaps] = useState([]);
+  const [lapStartTime, setLapStartTime] = useState(0);
+
+  const handleNewLap = () => {
+    const lapTime = runningTime - lapStartTime;
+    setLaps(prev => [...prev, lapTime]);
+    setLapStartTime(runningTime);
+  };
+
   const handlePause = async () => {
     setIsRunning(false);
     try {
@@ -207,7 +216,9 @@ const DashboardPage = () => {
                 onStart={handleStart}
                 onPause={handlePause}
                 onReset={handleReset}
+                onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
+                laps={laps}
                 />
               </div>
             </div>
