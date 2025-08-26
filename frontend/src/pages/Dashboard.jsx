@@ -53,10 +53,15 @@ const DashboardPage = () => {
   const [laps, setLaps] = useState([]);
   const [lapStartTime, setLapStartTime] = useState(0);
 
-  const handleNewLap = () => {
-    const lapTime = runningTime - lapStartTime;
-    setLaps(prev => [...prev, lapTime]);
-    setLapStartTime(runningTime);
+  const handleNewLap = async () => {
+    try {
+      await fetch('http://localhost:4999/api/record/newLap', { method: 'POST' });
+      const lapTime = runningTime - lapStartTime;
+      setLaps(prev => [...prev, lapTime]);
+      setLapStartTime(runningTime);
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   const handlePause = async () => {
