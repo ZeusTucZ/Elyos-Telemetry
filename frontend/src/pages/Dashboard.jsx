@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 
 import Swal from 'sweetalert2';
 
-import Landing from "../components/Landing";
 import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
@@ -89,7 +88,7 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [timerActive]);
 
-  const [showDashboard, setShowDashboard] = useState(false);
+  const showDashboard = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
@@ -156,8 +155,6 @@ const DashboardPage = () => {
 
   return (
     <div className="relative">
-      {!showDashboard && <Landing onFinish={() => setShowDashboard(true)} />}
-
       {showDashboard && (
         <>
           {/* Fade-in NavigationBar */}
