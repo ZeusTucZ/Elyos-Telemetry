@@ -88,7 +88,7 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [timerActive]);
 
-  const showDashboard = useState(true);
+  const showDashboard = true;
   const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
