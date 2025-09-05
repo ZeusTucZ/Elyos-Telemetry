@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 import Swal from 'sweetalert2';
 
-import Landing from "../components/Landing";
+import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
 import PerformanceTable from "../components/Performance";
 import IMUdata from "../components/IMUdata";
@@ -13,16 +13,6 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
-  // Solo muestra el landing si no se ha mostrado antes
-  const [showDashboard, setShowDashboard] = useState(() => {
-    return localStorage.getItem("elyosLandingShown") === "true";
-  });
-
-  const handleLandingFinish = () => {
-    setShowDashboard(true);
-    localStorage.setItem("elyosLandingShown", "true");
-  };
-
   const handleStart = async () => {
     try {
       await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
@@ -49,11 +39,27 @@ const DashboardPage = () => {
     setIsRunning(false);
     setRunningTime(0);
     setTimerActive(false);
+    setLaps([]);
+    setLapStartTime(0);
 
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const [laps, setLaps] = useState([]);
+  const [lapStartTime, setLapStartTime] = useState(0);
+
+  const handleNewLap = async () => {
+    try {
+      await fetch('http://localhost:4999/api/record/newLap', { method: 'POST' });
+      const lapTime = runningTime - lapStartTime;
+      setLaps(prev => [...prev, lapTime]);
+      setLapStartTime(runningTime);
+    } catch (err) {
+      console.log(err)
     }
   };
 
@@ -82,6 +88,7 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [timerActive]);
 
+  const showDashboard = true;
   const [isRunning, setIsRunning] = useState(false);
   
   // Performance data
@@ -91,8 +98,6 @@ const DashboardPage = () => {
   const [voltage_battery, setVoltage] = useState(0);
   const [rpm_motor, setRpms] = useState(0);
   const [ambient_temp, setambient_temp] = useState(0);
-  const [totalConsumption, setTotalConsumption] = useState(0); // ?
-  const [efficiency, setEfficiency] = useState(0); // ?
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
 
@@ -119,10 +124,8 @@ const DashboardPage = () => {
             setVelocity_x(latest.velocity_x);
             setVelocity_y(latest.velocity_y);
             setCurrent(latest.current);
-            setVoltage(latest.voltage_battery);
+            setVoltage(latest.voltage);
             setRpms(latest.rpms);
-            setTotalConsumption(latest.totalConsumption);
-            setEfficiency(latest.efficiency);
             setambient_temp(latest.ambient_temp);
             setLatitud(latest.latitude);
             setLongitud(latest.longitud);
@@ -136,7 +139,7 @@ const DashboardPage = () => {
 
             const newEntry = {
               id: counter,
-              voltage: latest.voltage_battery,
+              voltage: latest.voltage,
               current: latest.current,
             };
 
@@ -152,10 +155,17 @@ const DashboardPage = () => {
 
   return (
     <div className="relative">
-      {!showDashboard && <Landing onFinish={handleLandingFinish} />}
-
       {showDashboard && (
         <>
+          {/* Fade-in NavigationBar */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <NavigationBar />
+          </motion.div>
+
           {/* Fade-in Dashboard */}
           <motion.div
             className="min-h-screen flex flex-row bg-[#0A0F1C] text-white z-0 relative"
@@ -170,16 +180,16 @@ const DashboardPage = () => {
             <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
                 <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
-                  <Speedometer speed={Math.sqrt((velocity_x)^2 + (velocity_y)^2)} />
+                  <Speedometer speed={Math.sqrt((velocity_x ** 2) + (velocity_y ** 2))} />
                 </div>
                 <div className="basis-[40%] rounded-xl m-1">
                   <PerformanceTable
                     current={current}
                     voltage={voltage_battery}
-                    rpms={rpm_motor * Math.PI * 0.5588}
-                    totalConsumption={totalConsumption}
-                    efficiency={efficiency}
-                    distance={rpm_motor}
+                    rpms={rpm_motor}
+                    totalConsumption={0}
+                    efficiency={0}
+                    distance={(rpm_motor * Math.PI * 0.5588).toFixed(2)}
                     ambient_temp={ambient_temp}
                   />
                 </div>
@@ -210,7 +220,9 @@ const DashboardPage = () => {
                 onStart={handleStart}
                 onPause={handlePause}
                 onReset={handleReset}
+                onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
+                laps={laps}
                 />
               </div>
             </div>

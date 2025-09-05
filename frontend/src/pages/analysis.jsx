@@ -1,6 +1,6 @@
 import NavigationBar from "../components/NavigationBar";
 
-export default function SessionsPage() {
+export default function AnalysisPage() {
     return (
         <>
             <NavigationBar />
