@@ -5,7 +5,7 @@ import pool from './config/dbConfig.js';
 // Initiate the enviroment variables
 dotenv.config({ path: './env/.env' });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4999;
 
 // Try conection before initiating the server
 try {

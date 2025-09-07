@@ -36,10 +36,6 @@ export const getLectureById = async (req, res) => {
 };
 
 export const createLecture = async (req, res) => {
-  if (!getIsRunning()) {
-    return res.status(200).json({ message: 'Recording is off. Data not saved.' });
-  }
-
   const {
     session_id,
     timestamp,
