@@ -41,6 +41,7 @@ const DashboardPage = () => {
     setTimerActive(false);
     setLaps([]);
     setLapStartTime(0);
+    setAverageLapTime(0);
 
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
@@ -51,6 +52,8 @@ const DashboardPage = () => {
 
   const [laps, setLaps] = useState([]);
   const [lapStartTime, setLapStartTime] = useState(0);
+  const [lapsNumber, setLapsNumber] = useState(1);
+  const [averageLapTime, setAverageLapTime] = useState(0);
 
   const handleNewLap = async () => {
     try {
@@ -58,6 +61,8 @@ const DashboardPage = () => {
       const lapTime = runningTime - lapStartTime;
       setLaps(prev => [...prev, lapTime]);
       setLapStartTime(runningTime);
+      setLapsNumber(lapsNumber + 1);
+      setAverageLapTime(runningTime / lapsNumber);
     } catch (err) {
       console.log(err)
     }
@@ -65,9 +70,9 @@ const DashboardPage = () => {
 
   const handlePause = async () => {
     setIsRunning(false);
+    setTimerActive(false)
     try {
       await fetch('http://localhost:4999/api/record/pause', { method: 'POST' });
-      setTimerActive(false)
     } catch (err) {
       console.log(err);
       alert("Error. Failed pause button. Is the backend running?")
@@ -223,6 +228,7 @@ const DashboardPage = () => {
                 onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
                 laps={laps}
+                average_time={averageLapTime.toFixed(2)}
                 />
               </div>
             </div>
