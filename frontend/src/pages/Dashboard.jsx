@@ -43,6 +43,10 @@ const DashboardPage = () => {
     setLapStartTime(0);
     setAverageLapTime(0);
 
+    setTotalAh(0);
+    setTotalKm(0);
+    setTotalWh(0);
+
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
     } catch (err) {
@@ -106,6 +110,15 @@ const DashboardPage = () => {
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
 
+  // Special variables
+  const [totalWh, setTotalWh] = useState(0);
+  const [totalAh, setTotalAh] = useState(0);
+  const [totalKm, setTotalKm] = useState(0);
+
+  // Gear
+  const WHEEL_DIAMETER_M = 0.5588;
+  const GEAR_RATIO = 1;
+
   // IMU data
   const [roll, setRoll] = useState(0);
   const [pitch, setPitch] = useState(0);
@@ -135,6 +148,19 @@ const DashboardPage = () => {
             setLatitud(latest.latitude);
             setLongitud(latest.longitud);
 
+            const dt = 1; // s
+
+            // Energy eficiency
+            const powerW = latest.voltage * latest.current;
+            setTotalWh(prev => prev +  (powerW * dt) / 3600);
+            setTotalAh(prev => prev + (latest.current * dt) / 3600);
+
+            // Set distance
+            const wheelCircM = Math.PI * WHEEL_DIAMETER_M; // m/rev
+            const wheelRpm = latest.rpms / GEAR_RATIO;     // rev/min
+            const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
+            setTotalKm(prev => prev + (metersThisTick / 1000));
+
             // IMU data
             setRoll(latest.roll);
             setPitch(latest.pitch);
@@ -157,6 +183,9 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [counter, showDashboard, isRunning]);
+
+  const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
+  const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
 
   return (
     <div className="relative">
@@ -192,9 +221,11 @@ const DashboardPage = () => {
                     current={current}
                     voltage={voltage_battery}
                     rpms={rpm_motor}
-                    totalConsumption={0}
-                    efficiency={0}
-                    distance={(rpm_motor * Math.PI * 0.5588).toFixed(2)}
+                    totalConsumption={totalWh.toFixed(2)}
+                    efficiency={kmPerKWh.toFixed(2)}
+                    distance={totalKm.toFixed(3)}
+                    ampHours={totalAh.toFixed(2)}
+                    whPerKm={whPerKm.toFixed(2)}
                     ambient_temp={ambient_temp}
                   />
                 </div>
