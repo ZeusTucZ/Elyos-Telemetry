@@ -18,6 +18,7 @@ const DashboardPage = () => {
       await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
       setIsRunning(true);
       setTimerActive(true);
+      setCurrentLapTime(0);
     } catch (err) {
       console.log(err);
       alert("Error. Failed start button. Is the backend running?")
@@ -42,6 +43,7 @@ const DashboardPage = () => {
     setLaps([]);
     setLapStartTime(0);
     setAverageLapTime(0);
+    setCurrentLapTime(0);
 
     setTotalAh(0);
     setTotalKm(0);
@@ -63,10 +65,14 @@ const DashboardPage = () => {
     try {
       await fetch('http://localhost:4999/api/record/newLap', { method: 'POST' });
       const lapTime = runningTime - lapStartTime;
-      setLaps(prev => [...prev, lapTime]);
+      const newLaps = [...laps, lapTime];
+      setLaps(newLaps);
       setLapStartTime(runningTime);
+      setCurrentLapTime(0);
       setLapsNumber(lapsNumber + 1);
-      setAverageLapTime(runningTime / lapsNumber);
+      // Calculate the average
+      const avg = newLaps.length > 0 ? newLaps.reduce((a, b) => a + b, 0) / newLaps.length : 0;
+      setAverageLapTime(avg);
     } catch (err) {
       console.log(err)
     }
@@ -85,6 +91,7 @@ const DashboardPage = () => {
 
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [currentLapTime, setCurrentLapTime] = useState(0);
 
   // Count the time
   useEffect(() => {
@@ -92,6 +99,7 @@ const DashboardPage = () => {
     if (timerActive) {
       interval = setInterval(() => {
         setRunningTime(prev => prev + 1);
+        setCurrentLapTime(prev => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -258,6 +266,7 @@ const DashboardPage = () => {
                 onReset={handleReset}
                 onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
+                currentLapTime={`${Math.floor(currentLapTime / 60)}:${('0' + (currentLapTime % 60)).slice(-2)}`}
                 laps={laps}
                 average_time={averageLapTime.toFixed(2)}
                 />
