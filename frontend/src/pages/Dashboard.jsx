@@ -49,6 +49,8 @@ const DashboardPage = () => {
     setTotalKm(0);
     setTotalWh(0);
 
+    setDataHistory([]);
+
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
     } catch (err) {
