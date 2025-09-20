@@ -18,6 +18,7 @@ const DashboardPage = () => {
       await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
       setIsRunning(true);
       setTimerActive(true);
+      setCurrentLapTime(0);
     } catch (err) {
       console.log(err);
       alert("Error. Failed start button. Is the backend running?")
@@ -41,6 +42,14 @@ const DashboardPage = () => {
     setTimerActive(false);
     setLaps([]);
     setLapStartTime(0);
+    setAverageLapTime(0);
+    setCurrentLapTime(0);
+
+    setTotalAh(0);
+    setTotalKm(0);
+    setTotalWh(0);
+
+    setDataHistory([]);
 
     try {
       await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
@@ -51,13 +60,21 @@ const DashboardPage = () => {
 
   const [laps, setLaps] = useState([]);
   const [lapStartTime, setLapStartTime] = useState(0);
+  const [lapsNumber, setLapsNumber] = useState(1);
+  const [averageLapTime, setAverageLapTime] = useState(0);
 
   const handleNewLap = async () => {
     try {
       await fetch('http://localhost:4999/api/record/newLap', { method: 'POST' });
       const lapTime = runningTime - lapStartTime;
-      setLaps(prev => [...prev, lapTime]);
+      const newLaps = [...laps, lapTime];
+      setLaps(newLaps);
       setLapStartTime(runningTime);
+      setCurrentLapTime(0);
+      setLapsNumber(lapsNumber + 1);
+      // Calculate the average
+      const avg = newLaps.length > 0 ? newLaps.reduce((a, b) => a + b, 0) / newLaps.length : 0;
+      setAverageLapTime(avg);
     } catch (err) {
       console.log(err)
     }
@@ -65,9 +82,9 @@ const DashboardPage = () => {
 
   const handlePause = async () => {
     setIsRunning(false);
+    setTimerActive(false)
     try {
       await fetch('http://localhost:4999/api/record/pause', { method: 'POST' });
-      setTimerActive(false)
     } catch (err) {
       console.log(err);
       alert("Error. Failed pause button. Is the backend running?")
@@ -76,6 +93,7 @@ const DashboardPage = () => {
 
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [currentLapTime, setCurrentLapTime] = useState(0);
 
   // Count the time
   useEffect(() => {
@@ -83,6 +101,7 @@ const DashboardPage = () => {
     if (timerActive) {
       interval = setInterval(() => {
         setRunningTime(prev => prev + 1);
+        setCurrentLapTime(prev => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -100,6 +119,15 @@ const DashboardPage = () => {
   const [ambient_temp, setambient_temp] = useState(0);
   const [dataHistory, setDataHistory] = useState([]);
   const [counter, setCounter] = useState(0);
+
+  // Special variables
+  const [totalWh, setTotalWh] = useState(0);
+  const [totalAh, setTotalAh] = useState(0);
+  const [totalKm, setTotalKm] = useState(0);
+
+  // Gear
+  const WHEEL_DIAMETER_M = 0.5588;
+  const GEAR_RATIO = 1;
 
   // IMU data
   const [roll, setRoll] = useState(0);
@@ -130,6 +158,19 @@ const DashboardPage = () => {
             setLatitud(latest.latitude);
             setLongitud(latest.longitud);
 
+            const dt = 1; // s
+
+            // Energy eficiency
+            const powerW = latest.voltage * latest.current;
+            setTotalWh(prev => prev +  (powerW * dt) / 3600);
+            setTotalAh(prev => prev + (latest.current * dt) / 3600);
+
+            // Set distance
+            const wheelCircM = Math.PI * WHEEL_DIAMETER_M; // m/rev
+            const wheelRpm = latest.rpms / GEAR_RATIO;     // rev/min
+            const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
+            setTotalKm(prev => prev + (metersThisTick / 1000));
+
             // IMU data
             setRoll(latest.roll);
             setPitch(latest.pitch);
@@ -152,6 +193,9 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [counter, showDashboard, isRunning]);
+
+  const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
+  const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
 
   return (
     <div className="relative">
@@ -187,9 +231,11 @@ const DashboardPage = () => {
                     current={current}
                     voltage={voltage_battery}
                     rpms={rpm_motor}
-                    totalConsumption={0}
-                    efficiency={0}
-                    distance={(rpm_motor * Math.PI * 0.5588).toFixed(2)}
+                    totalConsumption={totalWh.toFixed(2)}
+                    efficiency={kmPerKWh.toFixed(2)}
+                    distance={totalKm.toFixed(3)}
+                    ampHours={totalAh.toFixed(2)}
+                    whPerKm={whPerKm.toFixed(2)}
                     ambient_temp={ambient_temp}
                   />
                 </div>
@@ -222,7 +268,9 @@ const DashboardPage = () => {
                 onReset={handleReset}
                 onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
+                currentLapTime={`${Math.floor(currentLapTime / 60)}:${('0' + (currentLapTime % 60)).slice(-2)}`}
                 laps={laps}
+                average_time={averageLapTime.toFixed(2)}
                 />
               </div>
             </div>
