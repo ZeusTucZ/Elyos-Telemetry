@@ -46,7 +46,7 @@ const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption
                 </tr>
                 <tr>
                     <td className="py-1">Ambient Temp</td>
-                    <td className="py-1">{ambient_temp} km</td>
+                    <td className="py-1">{ambient_temp} °</td>
                 </tr>
                 </tbody>
             </table>
