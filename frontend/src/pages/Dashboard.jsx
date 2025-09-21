@@ -224,7 +224,7 @@ const DashboardPage = () => {
             <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
               <div className="basis-[50%] m-2 flex flex-row">
                 <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
-                  <Speedometer speed={Math.sqrt((velocity_x ** 2) + (velocity_y ** 2))} />
+                  <Speedometer speed={Math.sqrt((velocity_x ** 2) + (velocity_y ** 2)).toFixed(2)} />
                 </div>
                 <div className="basis-[40%] rounded-xl m-1">
                   <PerformanceTable
