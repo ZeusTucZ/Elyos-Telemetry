@@ -1,6 +1,6 @@
 
 
-const RaceStats = ({ onStart, onPause, onReset, onNewLap, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0 }) => {
+const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0 }) => {
     return (
         <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-row'>
             <div className="basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-1">
@@ -40,7 +40,7 @@ const RaceStats = ({ onStart, onPause, onReset, onNewLap, running_time = 0, curr
                 <button onClick={onNewLap} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
                 <button onClick={onPause} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Pause</button>
                 <button onClick={onReset} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
-                <button className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
+                <button onClick={onSave} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
             </div>
         </div>
     )
