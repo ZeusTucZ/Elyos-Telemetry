@@ -13,6 +13,15 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
+  const handleSave = async () => {
+    // Post data to save route
+    try {
+      await fetch('http://localhost:4999/api/record/save', { method: 'POST' });
+    } catch (err) {
+      console.log('Error while saving data:', err);
+    }
+  }
+
   const handleStart = async () => {
     try {
       await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
@@ -266,6 +275,7 @@ const DashboardPage = () => {
                 onStart={handleStart}
                 onPause={handlePause}
                 onReset={handleReset}
+                onSave={handleSave}
                 onNewLap={handleNewLap}
                 running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
                 currentLapTime={`${Math.floor(currentLapTime / 60)}:${('0' + (currentLapTime % 60)).slice(-2)}`}
