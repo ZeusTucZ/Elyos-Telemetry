@@ -1,5 +1,7 @@
 import express from 'express';
 import { setIsRunning, getIsRunning } from '../isRunning.js';
+import pool from '../config/dbConfig.js';
+import buildLecturesXlsxBuffer from '../excel/export.js';
 
 // Start recording
 export const startRecording = async (req, res) => {
@@ -19,6 +21,20 @@ export const statusRecording = async (req, res) => {
 };
 
 // Save recording
-export const saveRecording = async (req, res) => {
-    res.json({ message: 'Save recording' });
+export const saveRecording = async (req, res, next) => {
+    try {
+        const lectures = await pool.getAllLectures();
+        const buffer = buildLecturesXlsxBuffer(lectures);
+
+        res.set({
+        'Content-Type':
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="lectures.xlsx"',
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-store',
+        });
+        res.send(buffer);
+    } catch (err) {
+        next(err);
+    }
 };
