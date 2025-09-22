@@ -18,7 +18,6 @@ router.post('/pause', stopRecording);
 router.get('/status', statusRecording);
 
 // Save recording
-router.post('/save', saveRecording);
 router.get('/save', saveRecording);
 
 export default router;

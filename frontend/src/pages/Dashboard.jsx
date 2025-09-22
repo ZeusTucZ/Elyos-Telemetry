@@ -14,12 +14,15 @@ import Battery from "../components/Battery";
 
 const DashboardPage = () => {
   const handleSave = async () => {
-    // Post data to save route
-    try {
-      await fetch('http://localhost:4999/api/record/save', { method: 'POST' });
-    } catch (err) {
-      console.log('Error while saving data:', err);
-    }
+    const resp = await fetch('http://localhost:4999/api/record/save', { method: 'GET', credentials: 'include' });
+    if (!resp.ok) return; // maneja error
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lectures.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const handleStart = async () => {
