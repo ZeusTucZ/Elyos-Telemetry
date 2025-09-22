@@ -2,7 +2,8 @@ import { Router } from 'express';
 import {
     startRecording,
     stopRecording,
-    statusRecording
+    statusRecording,
+    saveRecording
 } from '../controllers/RecordController.js';
 
 const router = Router();
@@ -15,5 +16,9 @@ router.post('/pause', stopRecording);
 
 // Status recording
 router.get('/status', statusRecording);
+
+// Save recording
+router.post('/save', saveRecording);
+router.get('/save', saveRecording);
 
 export default router;
