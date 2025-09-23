@@ -14,7 +14,7 @@ import Battery from "../components/Battery";
 
 const DashboardPage = () => {
   const handleSave = async () => {
-    const resp = await fetch('http://localhost:4999/api/record/save', { method: 'GET', credentials: 'include' });
+    const resp = await fetch('http://localhost:4999/api/record/save', { method: 'GET' });
     if (!resp.ok) return; // maneja error
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
