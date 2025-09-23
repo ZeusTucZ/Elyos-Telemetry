@@ -23,7 +23,8 @@ export const statusRecording = async (req, res) => {
 // Save recording
 export const saveRecording = async (req, res, next) => {
     try {
-        const lectures = await pool.getAllLectures();
+        const result = await pool.query('SELECT * FROM lectures');
+        const lectures = result.rows;
         const buffer = buildLecturesXlsxBuffer(lectures);
 
         res.set({

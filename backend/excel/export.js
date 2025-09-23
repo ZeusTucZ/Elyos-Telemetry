@@ -1,15 +1,8 @@
 import XLSX, { write } from 'xlsx';
 
-async function buildLecturesXlsxBuffer(data) {
-    try {
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Lectu');
-        XLSX.writeFile(wb, 'output.xlsx');
-    } catch (err) {
-        console.log('Error writing excel file:', err);
-        throw err;
-    }
+export default function buildLecturesXlsxBuffer(lectures) {
+  const worksheet = XLSX.utils.json_to_sheet(lectures);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Lectures');
+  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 }
-
-modules.export = { buildLecturesXlsxBuffer };
