@@ -13,8 +13,10 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://192.168.68.129:4999";
+
   const handleSave = async () => {
-    const resp = await fetch('http://localhost:4999/api/record/save', { method: 'GET' });
+    const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
     if (!resp.ok) return; // maneja error
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
@@ -26,16 +28,18 @@ const DashboardPage = () => {
   }
 
   const handleStart = async () => {
+    // Arranca UI/local primero (no depende del backend)
+    setIsRunning(true);
+    setTimerActive(true);
+    setCurrentLapTime(0);
+
+    // Intenta avisar al backend, pero si falla no bloquees
     try {
-      await fetch('http://localhost:4999/api/record/start', { method: 'POST' });
-      setIsRunning(true);
-      setTimerActive(true);
-      setCurrentLapTime(0);
+      await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
     } catch (err) {
-      console.log(err);
-      alert("Error. Failed start button. Is the backend running?")
+      console.warn("Backend record/start no disponible, continuando en modo local.", err);
     }
-  }
+  };
 
   const handleReset = async () => {
     const result = await Swal.fire({
@@ -64,7 +68,7 @@ const DashboardPage = () => {
     setDataHistory([]);
 
     try {
-      await fetch('http://localhost:4999/api/record/reset', { method: 'POST' });
+      await fetch(`${API_BASE}/api/record/reset`, { method: 'POST' });
     } catch (err) {
       console.log(err);
     }
@@ -77,7 +81,7 @@ const DashboardPage = () => {
 
   const handleNewLap = async () => {
     try {
-      await fetch('http://localhost:4999/api/record/newLap', { method: 'POST' });
+      await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
       const lapTime = runningTime - lapStartTime;
       const newLaps = [...laps, lapTime];
       setLaps(newLaps);
@@ -96,7 +100,7 @@ const DashboardPage = () => {
     setIsRunning(false);
     setTimerActive(false)
     try {
-      await fetch('http://localhost:4999/api/record/pause', { method: 'POST' });
+      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
     } catch (err) {
       console.log(err);
       alert("Error. Failed pause button. Is the backend running?")
@@ -156,7 +160,7 @@ const DashboardPage = () => {
     if (!showDashboard || !isRunning) return;
 
     const interval = setInterval(() => {
-      fetch("http://localhost:4999/api/lectures")
+      fetch(`${API_BASE}/api/lectures`)
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
@@ -204,7 +208,7 @@ const DashboardPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [counter, showDashboard, isRunning]);
+  }, [counter, showDashboard, isRunning, API_BASE]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
