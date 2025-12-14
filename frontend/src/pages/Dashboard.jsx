@@ -210,7 +210,7 @@ const DashboardPage = () => {
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
 
   return (
-    <div className="relative">
+    <div className="relative text-[clamp(0.75rem,1vw,1rem)]">
       {showDashboard && (
         <>
           {/* Fade-in NavigationBar */}
@@ -224,67 +224,98 @@ const DashboardPage = () => {
 
           {/* Fade-in Dashboard */}
           <motion.div
-            className="min-h-screen flex flex-row bg-[#0A0F1C] text-white z-0 relative"
+            className="
+              min-h-screen
+              flex flex-col md:flex-row
+              bg-[#0A0F1C] text-white z-0 relative
+              p-[clamp(0.4rem,1vw,1rem)]
+              gap-[clamp(0.4rem,1vw,0.75rem)]
+            "
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 3.2, ease: "easeOut" }}
           >
-            <div className="basis-[4%] bg-white m-1 rounded-xl">
-              {/* Baterry */}
-              <Battery percentage={4 * voltage_battery} />
-            </div>
-            <div className="basis-[66%] bg-[#20233d] m-1 rounded-xl flex flex-col">
-              <div className="basis-[50%] m-2 flex flex-row">
-                <div className="basis-[60%] rounded-xl m-1 flex justify-center items-center">
-                  <Speedometer speed={Math.sqrt((velocity_x ** 2) + (velocity_y ** 2)).toFixed(2)} />
-                </div>
-                <div className="basis-[40%] rounded-xl m-1">
-                  <PerformanceTable
-                    current={current}
-                    voltage={voltage_battery}
-                    rpms={rpm_motor}
-                    totalConsumption={totalWh.toFixed(2)}
-                    efficiency={kmPerKWh.toFixed(2)}
-                    distance={totalKm.toFixed(3)}
-                    ampHours={totalAh.toFixed(2)}
-                    whPerKm={whPerKm.toFixed(2)}
-                    ambient_temp={ambient_temp}
-                  />
-                </div>
+            {/* Battery: arriba en móvil (horizontal), izquierda en md (vertical si quieres) */}
+            <div
+              className="
+                flex-none
+                w-full h-[7vh]
+                md:w-16 md:h-auto
+                rounded-xl p-1
+              "
+            >
+              {/* móvil: horizontal */}
+              <div className="w-full h-full md:hidden">
+                <Battery percentage={4 * voltage_battery} orientation="horizontal" />
               </div>
 
-              <div className="basis-[30%] m-2 rounded-xl flex flex-row">
-                <div className="basis-[65%] bg-white rounded-xl m-1">
-                  <VoltageCurrentChart dataHistory={dataHistory} />
-                </div>
-                <div className="basis-[35%] bg-white rounded-xl m-1">
-                  <IMUdata 
-                    roll={roll}
-                    pitch={pitch}
-                    yaw={yaw}
-                    accel_x={acceleration_x}
-                    accel_y={acceleration_y}
-                  />
-                </div>
+              {/* md+: vertical */}
+              <div className="hidden md:block w-full h-full">
+                <Battery percentage={4 * voltage_battery} orientation="vertical" />
               </div>
             </div>
 
-            <div className="basis-[52%] bg-[#20233d] m-1 rounded-xl flex flex-col">
-              <div className="basis-[50%] rounded-xl bg-white">
-                <MapGPS latitude={latitude} longitud={longitud}/>
+            {/* Contenido principal: en móvil se apila, en md se pone en fila */}
+            <div className="flex-1 flex flex-col md:flex-row gap-[clamp(0.4rem,1vw,0.75rem)] min-w-0">
+              {/* Panel principal */}
+              <div className="w-full max-w-full flex-[1.4] bg-[#20233d] rounded-xl flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 m-2 flex flex-col lg:flex-row min-w-0">
+                  <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
+                    <Speedometer
+                      speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2).toFixed(2)}
+                    />
+                  </div>
+
+                  <div className="flex-[2] rounded-xl m-1 min-w-0">
+                    <PerformanceTable
+                      current={current}
+                      voltage={voltage_battery}
+                      rpms={rpm_motor}
+                      totalConsumption={totalWh.toFixed(2)}
+                      efficiency={kmPerKWh.toFixed(2)}
+                      distance={totalKm.toFixed(3)}
+                      ampHours={totalAh.toFixed(2)}
+                      whPerKm={whPerKm.toFixed(2)}
+                      ambient_temp={ambient_temp}
+                    />
+                  </div>
+                </div>
+
+                <div className="m-2 rounded-xl flex flex-col lg:flex-row min-w-0">
+                  <div className="flex-[2] bg-white rounded-xl m-1 min-w-0">
+                    <VoltageCurrentChart dataHistory={dataHistory} />
+                  </div>
+                  <div className="flex-[1] bg-white rounded-xl m-1 min-w-0">
+                    <IMUdata
+                      roll={roll}
+                      pitch={pitch}
+                      yaw={yaw}
+                      accel_x={acceleration_x}
+                      accel_y={acceleration_y}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="basis-[50%] rounded-xl">
-                <RaceStats 
-                onStart={handleStart}
-                onPause={handlePause}
-                onReset={handleReset}
-                onSave={handleSave}
-                onNewLap={handleNewLap}
-                running_time={`${Math.floor(runningTime / 60)}:${('0' + (runningTime % 60)).slice(-2)}`}
-                currentLapTime={`${Math.floor(currentLapTime / 60)}:${('0' + (currentLapTime % 60)).slice(-2)}`}
-                laps={laps}
-                average_time={averageLapTime.toFixed(2)}
-                />
+
+              {/* Panel mapa + stats */}
+              <div className="w-full max-w-full flex-[1.6] bg-[#20233d] rounded-xl flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 rounded-xl bg-white m-2 min-h-[220px]">
+                  <MapGPS latitude={latitude} longitud={longitud} />
+                </div>
+
+                <div className="flex-1 rounded-xl m-2 min-w-0">
+                  <RaceStats
+                    onStart={handleStart}
+                    onPause={handlePause}
+                    onReset={handleReset}
+                    onSave={handleSave}
+                    onNewLap={handleNewLap}
+                    running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
+                    currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
+                    laps={laps}
+                    average_time={averageLapTime.toFixed(2)}
+                  />
+                </div>
               </div>
             </div>
           </motion.div>

@@ -2,8 +2,8 @@
 
 const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0 }) => {
     return (
-        <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-row'>
-            <div className="basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-1">
+        <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-col md:flex-row'>
+            <div className="md:basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-2 min-w-0">
                 {/* Time control */}
                 <h2 className="text-xl font-semibold text-center m-4">Time Control</h2>
                 <table className="w-full text-left table-auto">
@@ -23,7 +23,7 @@ const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time 
                     </tbody>
                 </table>
             </div>
-            <div className="basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-1">
+            <div className="md:basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-2 min-w-0">
                 {/* Race progress */}
                 <h2 className="text-xl font-semibold text-center m-4">Race Progress</h2>
                 <div>
@@ -35,7 +35,7 @@ const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time 
                     </div>
                 <div>Current Lap Time: {currentLapTime}</div>
             </div>
-            <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-4 shadow-lg m-1">
+            <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-3 shadow-lg m-1 min-w-0">
                 <button onClick={onStart} className="bg-[#A6A8B2] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
                 <button onClick={onNewLap} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
                 <button onClick={onPause} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Pause</button>
