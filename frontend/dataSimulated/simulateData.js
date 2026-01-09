@@ -72,5 +72,5 @@ app.get("/api/lectures", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Simulated data is running on http://192.168.68.129:${PORT}/api/lectures`);
+  console.log(`Simulated data is running on http://localhost:${PORT}/api/lectures`);
 });

@@ -13,7 +13,7 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const DashboardPage = () => {
-  const API_BASE = process.env.REACT_APP_API_BASE || "http://192.168.68.129:4999";
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4999";
 
   const handleSave = async () => {
     const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
@@ -55,11 +55,13 @@ const DashboardPage = () => {
 
     setIsRunning(false);
     setRunningTime(0);
+    setRemainingTime(2100);
     setTimerActive(false);
     setLaps([]);
     setLapStartTime(0);
     setAverageLapTime(0);
     setCurrentLapTime(0);
+    setLapsNumber(1);
 
     setTotalAh(0);
     setTotalKm(0);
@@ -110,6 +112,7 @@ const DashboardPage = () => {
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [currentLapTime, setCurrentLapTime] = useState(0);
+  const [remaining_time, setRemainingTime] = useState(2100)
 
   // Count the time
   useEffect(() => {
@@ -117,6 +120,7 @@ const DashboardPage = () => {
     if (timerActive) {
       interval = setInterval(() => {
         setRunningTime(prev => prev + 1);
+        setRemainingTime(prev => prev - 1);
         setCurrentLapTime(prev => prev + 1);
       }, 1000);
     }
@@ -318,6 +322,8 @@ const DashboardPage = () => {
                     currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
                     laps={laps}
                     average_time={averageLapTime.toFixed(2)}
+                    current_lap={lapsNumber}
+                    remaining_time={`${Math.floor(remaining_time / 60)}:${("0" + (remaining_time % 60)).slice(-2)}`}
                   />
                 </div>
               </div>

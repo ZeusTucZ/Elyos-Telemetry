@@ -1,6 +1,6 @@
 
 
-const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0 }) => {
+const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0, current_lap = 1, remaining_time = 0 }) => {
     return (
         <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-col md:flex-row'>
             <div className="md:basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-2 min-w-0">
@@ -19,6 +19,14 @@ const RaceStats = ({ onStart, onPause, onReset, onSave , onNewLap, running_time 
                     <tr className="border-b border-gray-700">
                         <td className="py-1">Target Time/Lap</td>
                         <td className="py-1">{target_time}</td>
+                    </tr>
+                    <tr className="border-b border-gray-700">
+                        <td className="py-1">Current Lap</td>
+                        <td className="py-1">{current_lap}</td>
+                    </tr>
+                    <tr className="border-b border-gray-700">
+                        <td className="py-1">Remaining time</td>
+                        <td className="py-1">{remaining_time}</td>
                     </tr>
                     </tbody>
                 </table>
