@@ -16,15 +16,19 @@ const DashboardPage = () => {
   const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4999";
 
   const handleSave = async () => {
-    const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
-    if (!resp.ok) return; // maneja error
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'lectures.xlsx';
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
+      if (!resp.ok) return; // maneja error
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lectures.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Asegurate de iniciar el backend")
+    }
   }
 
   const handleStart = async () => {
@@ -97,17 +101,6 @@ const DashboardPage = () => {
       console.log(err)
     }
   };
-
-  const handlePause = async () => {
-    setIsRunning(false);
-    setTimerActive(false)
-    try {
-      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
-    } catch (err) {
-      console.log(err);
-      alert("Error. Failed pause button. Is the backend running?")
-    }
-  }
 
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
@@ -314,7 +307,6 @@ const DashboardPage = () => {
                 <div className="flex-1 rounded-xl m-2 min-w-0">
                   <RaceStats
                     onStart={handleStart}
-                    onPause={handlePause}
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}
