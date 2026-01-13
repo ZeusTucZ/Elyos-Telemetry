@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-
+import { io } from "socket.io-client";
 import Swal from 'sweetalert2';
 
 import NavigationBar from "../components/NavigationBar";
@@ -12,136 +12,23 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
+const socket = io("http://192.168.68.110:4999");
+
 const DashboardPage = () => {
-  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4999";
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://192.168.68.110:4999";
 
-  // Check authentication
+  // States
   const [canControl, setCanControl] = useState(false);
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      try {
-        const resp = await fetch(`${API_BASE}/api/auth/check-control`);
-        const data = await resp.json();
-
-        console.log("¿Soy el controlador?:", data.canControl);
-
-        setCanControl(data.canControl);
-      } catch (err) {
-        console.error("Error verificando permisos:", err);
-        setCanControl(false); // set control to false for security
-      }
-    };
-    fetchPermissions();
-  }, [API_BASE]);
-
-  const handleSave = async () => {
-    if (!canControl) return;
-    try {
-      const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
-      if (!resp.ok) return; // maneja error
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'lectures.xlsx';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.warn("Asegurate de iniciar el backend")
-    }
-  }
-
-  const handleStart = async () => {
-    if (!canControl) return;
-    // Arranca UI/local primero (no depende del backend)
-    setIsRunning(true);
-    setTimerActive(true);
-    setCurrentLapTime(0);
-
-    // Intenta avisar al backend, pero si falla no bloquees
-    try {
-      await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
-    } catch (err) {
-      console.warn("Backend record/start no disponible, continuando en modo local.", err);
-    }
-  };
-
-  const handleReset = async () => {
-    if (!canControl) return;
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'You will lose all session lectures',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, reset it!',
-      cancelButtonText: 'Cancel',
-    });
-
-    if (!result.isConfirmed) return;
-
-    setIsRunning(false);
-    setRunningTime(0);
-    setRemainingTime(2100);
-    setTimerActive(false);
-    setLaps([]);
-    setLapStartTime(0);
-    setAverageLapTime(0);
-    setCurrentLapTime(0);
-    setLapsNumber(1);
-
-    setTotalAh(0);
-    setTotalKm(0);
-    setTotalWh(0);
-
-    setDataHistory([]);
-
-    try {
-      await fetch(`${API_BASE}/api/record/reset`, { method: 'POST' });
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   const [laps, setLaps] = useState([]);
   const [lapStartTime, setLapStartTime] = useState(0);
   const [lapsNumber, setLapsNumber] = useState(1);
   const [averageLapTime, setAverageLapTime] = useState(0);
 
-  const handleNewLap = async () => {
-    if (!canControl) return;
-    try {
-      await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
-      const lapTime = runningTime - lapStartTime;
-      const newLaps = [...laps, lapTime];
-      setLaps(newLaps);
-      setLapStartTime(runningTime);
-      setCurrentLapTime(0);
-      setLapsNumber(lapsNumber + 1);
-      // Calculate the average
-      const avg = newLaps.length > 0 ? newLaps.reduce((a, b) => a + b, 0) / newLaps.length : 0;
-      setAverageLapTime(avg);
-    } catch (err) {
-      console.log(err)
-    }
-  };
-
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [currentLapTime, setCurrentLapTime] = useState(0);
   const [remaining_time, setRemainingTime] = useState(2100)
-
-  // Count the time
-  useEffect(() => {
-    let interval = null;
-    if (timerActive) {
-      interval = setInterval(() => {
-        setRunningTime(prev => prev + 1);
-        setRemainingTime(prev => prev - 1);
-        setCurrentLapTime(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [timerActive]);
 
   const showDashboard = true;
   const [isRunning, setIsRunning] = useState(false);
@@ -175,6 +62,148 @@ const DashboardPage = () => {
   // Map GPS
   const [latitude, setLatitud] = useState(0);
   const [longitud, setLongitud] = useState(0);
+
+
+  // Logic functions
+  const executeResetLogic = useCallback(() => {
+    setIsRunning(false);
+    setRunningTime(0);
+    setRemainingTime(2100);
+    setTimerActive(false);
+    setLaps([]);
+    setLapStartTime(0);
+    setAverageLapTime(0);
+    setCurrentLapTime(0);
+    setLapsNumber(1);
+    setDataHistory([]);
+    setTotalAh(0);
+    setTotalKm(0);
+    setTotalWh(0);
+    setCounter(0);
+  }, []);
+
+  const executeNewLapLogic = useCallback(() => {
+    setLaps((prevLaps) => {
+      const lapTime = runningTime - lapStartTime;
+      const newLaps = [...prevLaps, lapTime];
+      const avg = newLaps.length > 0 ? newLaps.reduce((a, b) => a + b, 0) / newLaps.length : 0;
+      setAverageLapTime(avg);
+      return newLaps;
+    });
+    setLapStartTime(runningTime);
+    setCurrentLapTime(0);
+    setLapsNumber((prev) => prev + 1);
+  }, [runningTime, lapStartTime]);
+
+  // Socket effects
+  useEffect(() => {
+    socket.on("ejecutar-accion", (data) => {
+      console.log("Acción remota recibida:", data.accion);
+      switch(data.accion) {
+        case "START_RACE":
+          setIsRunning(true);
+          setTimerActive(true);
+          setCurrentLapTime(0);
+          break;
+        case "RESET_RACE":
+          executeResetLogic();
+          break;
+        case "NEW_LAP":
+          executeNewLapLogic();
+          break;
+        default:
+          break;
+      }
+    });
+    return () => socket.off("ejecutar-accion");
+  }, [executeNewLapLogic, executeResetLogic]);
+
+  // Check authentication
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      // Leemos el token de la URL (si existe)
+      const urlParams = new URLSearchParams(window.location.search);
+      const myToken = urlParams.get('token');
+
+      try {
+        // Enviamos el token al servidor para que lo valide
+        const resp = await fetch(`${API_BASE}/api/auth/check-control`, {
+          headers: {
+            'Authorization': `Bearer ${myToken}`
+          }
+        });
+        const data = await resp.json();
+        setCanControl(data.canControl);
+      } catch (err) {
+        setCanControl(false);
+      }
+    };
+    fetchPermissions();
+  }, [API_BASE]);
+
+  // Admin functions
+  const handleStart = async () => {
+    if (!canControl) return;
+    socket.emit("comando-admin", { accion: "START_RACE" });
+    try {
+      await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
+    } catch (err) { console.warn("Backend error", err); }
+  };
+
+  const handleReset = async () => {
+    if (!canControl) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'You will lose all session lectures',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reset it!',
+    });
+    if (!result.isConfirmed) return;
+
+    socket.emit("comando-admin", { accion: "RESET_RACE" });
+    try {
+      await fetch(`${API_BASE}/api/record/reset`, { method: 'POST' });
+    } catch (err) { console.error(err); }
+  };
+
+  const handleNewLap = async () => {
+    if (!canControl) return;
+    socket.emit("comando-admin", { accion: "NEW_LAP" });
+    try {
+      await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSave = async () => {
+    if (!canControl) return;
+    try {
+      const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
+      if (!resp.ok) return; // maneja error
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lectures.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Asegurate de iniciar el backend")
+    }
+  }
+
+  // Count the time
+  useEffect(() => {
+    let interval = null;
+    if (timerActive) {
+      interval = setInterval(() => {
+        setRunningTime(prev => prev + 1);
+        setRemainingTime(prev => prev - 1);
+        setCurrentLapTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive]);
 
   useEffect(() => {
     if (!showDashboard || !isRunning) return;
