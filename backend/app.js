@@ -8,6 +8,7 @@ import configurationRoutes from "./routes/ConfigurationRoutes.js";
 import sessionRoutes from "./routes/SessionRoutes.js";
 import lapRoutes from "./routes/LapsRoutes.js";
 import RecordRoutes from "./routes/RecordRoutes.js";
+import authRoutes from "./routes/AuthRoutes.js";
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use('/api/configurations', configurationRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/laps', lapRoutes);
 app.use('/api/record', RecordRoutes);
+app.use('/api/auth', authRoutes);
 
 export default app;

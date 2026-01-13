@@ -15,7 +15,27 @@ import Battery from "../components/Battery";
 const DashboardPage = () => {
   const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4999";
 
+  // Check authentication
+  const [canControl, setCanControl] = useState(false);
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const resp = await fetch(`${API_BASE}/api/auth/check-control`);
+        const data = await resp.json();
+
+        console.log("¿Soy el controlador?:", data.canControl);
+
+        setCanControl(data.canControl);
+      } catch (err) {
+        console.error("Error verificando permisos:", err);
+        setCanControl(false); // set control to false for security
+      }
+    };
+    fetchPermissions();
+  }, [API_BASE]);
+
   const handleSave = async () => {
+    if (!canControl) return;
     try {
       const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
       if (!resp.ok) return; // maneja error
@@ -32,6 +52,7 @@ const DashboardPage = () => {
   }
 
   const handleStart = async () => {
+    if (!canControl) return;
     // Arranca UI/local primero (no depende del backend)
     setIsRunning(true);
     setTimerActive(true);
@@ -46,6 +67,7 @@ const DashboardPage = () => {
   };
 
   const handleReset = async () => {
+    if (!canControl) return;
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: 'You will lose all session lectures',
@@ -86,6 +108,7 @@ const DashboardPage = () => {
   const [averageLapTime, setAverageLapTime] = useState(0);
 
   const handleNewLap = async () => {
+    if (!canControl) return;
     try {
       await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
       const lapTime = runningTime - lapStartTime;
