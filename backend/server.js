@@ -4,6 +4,19 @@ import { Server } from 'socket.io';
 import app from './app.js';
 import pool from './config/dbConfig.js';
 
+import os from 'os';
+
+const nets = os.networkInterfaces();
+let localIp = 'localhost';
+
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+            localIp = net.address;
+        }
+    }
+}
+
 dotenv.config({ path: './env/.env' });
 
 const PORT = process.env.PORT || 4999;
@@ -38,7 +51,9 @@ try {
 
   // 4. IMPORTANTE: Usar server.listen en lugar de app.listen
   server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Servidor listo!`);
+    console.log(`🌐 En esta laptop: http://localhost:${PORT}`);
+    console.log(`📱 En otros dispositivos: http://${localIp}:${PORT}`);
   });
 } catch (err) {
   console.error("🔴 Error while trying to connect to the data base:", err.stack);

@@ -12,10 +12,11 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const socket = io("http://192.168.68.110:4999");
+const currentHost = window.location.hostname;
+const socket = io(`http://${currentHost}:4999`);
 
 const DashboardPage = () => {
-  const API_BASE = process.env.REACT_APP_API_BASE || "http://192.168.68.110:4999";
+  const API_BASE = `http://${currentHost}:4999`;
 
   // States
   const [canControl, setCanControl] = useState(false);
