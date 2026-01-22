@@ -359,6 +359,7 @@ const DashboardPage = () => {
 
                 <div className="flex-1 rounded-xl m-2 min-w-0">
                   <RaceStats
+                    canControl={canControl}
                     onStart={handleStart}
                     onReset={handleReset}
                     onSave={handleSave}
