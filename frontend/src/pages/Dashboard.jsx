@@ -64,6 +64,26 @@ const DashboardPage = () => {
   const [latitude, setLatitud] = useState(0);
   const [longitud, setLongitud] = useState(0);
 
+  // Enter initial state
+  useEffect(() => {
+    socket.on("init-state", (state) => {
+      console.log("Sincronizando estado inicial:", state);
+      
+      if (state.isRunning) {
+        setIsRunning(true);
+        setTimerActive(true);
+        setLapsNumber(state.lapsNumber);
+        
+        // Calcular cuánto tiempo ha pasado desde que inició la carrera
+        const secondsPassed = Math.floor((Date.now() - state.startTime) / 1000);
+        setRunningTime(secondsPassed);
+        setRemainingTime(2100 - secondsPassed);
+      }
+    });
+
+    return () => socket.off("init-state");
+  }, []);
+
 
   // Logic functions
   const executeResetLogic = useCallback(() => {

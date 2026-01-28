@@ -30,11 +30,34 @@ const io = new Server(server, {
   }
 });
 
+// Global state of the race
+let raceState = {
+  isRunning: false,
+  startTime: null,
+  laps: [],
+  lapsNumber: 1
+};
+
 io.on("connection", (socket) => {
   console.log(`📱 Devices connected: ${socket.id}`);
 
+  socket.emit("init-state", raceState);
+
   socket.on("comando-admin", (data) => {
     console.log("Order received from admin:", data.accion);
+
+    if (data.accion === "START_RACE") {
+      raceState.isRunning = true;
+      raceState.startTime = Date.now();
+    } else if (data.accion === "RESET_RACE") {
+      raceState.isRunning = false;
+      raceState.startTime = null;
+      raceState.laps = [];
+      raceState.lapsNumber = 1;
+    } else if (data.accion === "NEW_LAP") {
+      raceState.lapsNumber += 1;
+    }
+
     io.emit("ejecutar-accion", data);
   });
 
