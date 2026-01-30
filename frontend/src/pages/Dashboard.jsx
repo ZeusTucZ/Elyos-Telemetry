@@ -49,9 +49,10 @@ const DashboardPage = () => {
   const [totalAh, setTotalAh] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
 
-  // Gear
+  // Gear and motor
   const WHEEL_DIAMETER_M = 0.5588;
-  const GEAR_RATIO = 1;
+  const [gearRatio, setGearRatio] = useState(1.0);
+  const [motorId, setMotorId] = useState('Koford');
 
   // IMU data
   const [roll, setRoll] = useState(0);
@@ -83,6 +84,60 @@ const DashboardPage = () => {
 
     return () => socket.off("init-state");
   }, []);
+
+  useEffect(() => {
+    // Pedir datos al cargar por primera vez
+    fetch(`${API_BASE}/api/vehicle-params`)
+      .then(res => res.json())
+      .then(data => {
+        setGearRatio(data.gearRatio);
+        setMotorId(data.motorId);
+      });
+
+    // Escuchar actualizaciones en tiempo real
+    const handleUpdate = (data) => {
+      setGearRatio(data.gearRatio);
+      setMotorId(data.motorId);
+    };
+
+    socket.on("params-updated", handleUpdate);
+    return () => socket.off("params-updated", handleUpdate);
+  }, [API_BASE]);
+
+  const handleSettingsUpdate = async () => {
+    if (!canControl) return;
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Vehicle Parameters',
+      html:
+        `<label>Motor ID</label>` +
+        `<select id="swal-motor" class="swal2-input">
+          <option value="Koford" ${motorId === 'Koford' ? 'selected' : ''}>Koford</option>
+          <option value="HUB1" ${motorId === 'HUB1' ? 'selected' : ''}>HUB1</option>
+        </select>` + 
+        `<br>` +
+        `<label>Gear Ratio</label>` +
+        `<input id="swal-ratio" class="swal2-input" type="number" step="0.01" value="${gearRatio}">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      preConfirm: () => {
+        return {
+          motorId: document.getElementById('swal-motor').value,
+          gearRatio: document.getElementById('swal-ratio').value
+        }
+      }
+    });
+
+    if (formValues) {
+      // Mandamos los datos al servidor vía POST
+      await fetch(`${API_BASE}/api/vehicle-params`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValues)
+      });
+      Swal.fire('Updated!', 'Vehicle parameters changed.', 'success');
+    }
+  };
 
 
   // Logic functions
@@ -253,7 +308,7 @@ const DashboardPage = () => {
 
             // Set distance
             const wheelCircM = Math.PI * WHEEL_DIAMETER_M; // m/rev
-            const wheelRpm = latest.rpms / GEAR_RATIO;     // rev/min
+            const wheelRpm = latest.rpms / gearRatio;     // rev/min
             const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
             setTotalKm(prev => prev + (metersThisTick / 1000));
 
@@ -278,7 +333,7 @@ const DashboardPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [counter, showDashboard, isRunning, API_BASE]);
+  }, [counter, showDashboard, isRunning, API_BASE, gearRatio]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
@@ -384,6 +439,7 @@ const DashboardPage = () => {
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}
+                    onNewConfig={handleSettingsUpdate}
                     running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
                     currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
                     laps={laps}

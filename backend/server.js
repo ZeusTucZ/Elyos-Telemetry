@@ -38,9 +38,37 @@ let raceState = {
   lapsNumber: 1
 };
 
+// vehicle params
+let vehicleParams = {
+  motorId: 'Koford',
+  gearRatio: 1.0
+};
+
+// Get vehicle params data
+app.get('/api/vehicle-params', (req, res) => {
+  res.json(vehicleParams);
+});
+
+// Update vehicle params data
+app.post('/api/vehicle-params', (req, res) => {
+  const { motorId, gearRatio } = req.body;
+
+  vehicleParams = {
+    motorId: motorId || vehicleParams.motorId,
+    gearRatio: gearRatio || vehicleParams.gearRatio
+  }
+
+  // Notify all devices
+  io.emit('params-updated', vehicleParams);
+
+  console.log("Updated values:", vehicleParams);
+  res.json({ message: "Success", current: vehicleParams });
+});
+
 io.on("connection", (socket) => {
   console.log(`📱 Devices connected: ${socket.id}`);
 
+  socket.emit("params-updated", vehicleParams);
   socket.emit("init-state", raceState);
 
   socket.on("comando-admin", (data) => {
