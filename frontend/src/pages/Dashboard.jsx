@@ -297,7 +297,7 @@ const DashboardPage = () => {
             setRpms(latest.rpms);
             setambient_temp(latest.ambient_temp);
             setLatitud(latest.latitude);
-            setLongitud(latest.longitud);
+            setLongitud(latest.longitude);
 
             const dt = 1; // s
 
