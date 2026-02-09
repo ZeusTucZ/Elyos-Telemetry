@@ -71,14 +71,24 @@ const DashboardPage = () => {
       console.log("Sincronizando estado inicial:", state);
       
       if (state.isRunning) {
+        const secondsPassedSinceBeginning = Math.floor((Date.now() - state.startTime) / 1000);
+        const now = Date.now();
+        const secondsInCurrentLap = Math.floor((now - state.lastLapStartTime) / 1000);
+
         setIsRunning(true);
         setTimerActive(true);
+
+        setCurrentLapTime(secondsInCurrentLap);
         setLapsNumber(state.lapsNumber);
-        
-        // Calcular cuánto tiempo ha pasado desde que inició la carrera
-        const secondsPassed = Math.floor((Date.now() - state.startTime) / 1000);
-        setRunningTime(secondsPassed);
-        setRemainingTime(2100 - secondsPassed);
+        setLaps(state.laps)
+        setRunningTime(secondsPassedSinceBeginning);
+        setRemainingTime(2100 - secondsPassedSinceBeginning);
+
+        var avg = state.laps.reduce((acc, lap) => acc + lap, 0) / state.laps.length;
+        if (Number.isNaN(avg)) {
+          avg = 0;
+        }
+        setAverageLapTime(avg);
       }
     });
 

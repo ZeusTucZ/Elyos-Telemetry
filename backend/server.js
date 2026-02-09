@@ -32,10 +32,11 @@ const io = new Server(server, {
 
 // Global state of the race
 let raceState = {
-  isRunning: false,
-  startTime: null,
-  laps: [],
-  lapsNumber: 1
+  isRunning: false, // Start the program
+  startTime: null, // Store the initial time
+  laps: [], // Store the durations
+  lapsNumber: 1, // Store the number of laps
+  lastLapStartTime: null // Store the time since the last lap start
 };
 
 // vehicle params
@@ -73,17 +74,23 @@ io.on("connection", (socket) => {
 
   socket.on("comando-admin", (data) => {
     console.log("Order received from admin:", data.accion);
+    const now = Date.now();
 
     if (data.accion === "START_RACE") {
       raceState.isRunning = true;
-      raceState.startTime = Date.now();
+      raceState.startTime = now;
+      raceState.lastLapStartTime = now;
+      raceState.laps = [];
     } else if (data.accion === "RESET_RACE") {
       raceState.isRunning = false;
       raceState.startTime = null;
       raceState.laps = [];
       raceState.lapsNumber = 1;
     } else if (data.accion === "NEW_LAP") {
+      const duration = Math.floor((now - raceState.lastLapStartTime) / 1000);
+      raceState.laps.push(duration);
       raceState.lapsNumber += 1;
+      raceState.lastLapStartTime = now;
     }
 
     io.emit("ejecutar-accion", data);
