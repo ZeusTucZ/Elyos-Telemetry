@@ -65,6 +65,11 @@ const DashboardPage = () => {
   const [latitude, setLatitud] = useState(0);
   const [longitud, setLongitud] = useState(0);
 
+  // Extra variables
+  const [altitude, setAltitude] = useState(0);
+  const [numberOfSatellites, setNumberOfSatellites] = useState(0);
+  const [airSpeed, setAirSpeed] = useState(0);
+
   // Enter initial state
   useEffect(() => {
     socket.on("init-state", (state) => {
@@ -329,6 +334,11 @@ const DashboardPage = () => {
             setAccel_x(latest.acceleration_x);
             setAccel_y(latest.acceleration_y);
 
+            // Extra data
+            setAltitude(latest.altitude_m);
+            setNumberOfSatellites(latest.num_sats);
+            setAirSpeed(latest.air_speed);
+
             const newEntry = {
               id: counter,
               voltage: latest.voltage,
@@ -456,6 +466,9 @@ const DashboardPage = () => {
                     average_time={averageLapTime.toFixed(2)}
                     current_lap={lapsNumber}
                     remaining_time={`${Math.floor(remaining_time / 60)}:${("0" + (remaining_time % 60)).slice(-2)}`}
+                    altitude={altitude}
+                    num_sats={numberOfSatellites}
+                    airSpeed={airSpeed}
                   />
                 </div>
               </div>

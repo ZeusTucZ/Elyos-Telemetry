@@ -1,6 +1,6 @@
 
 
-const RaceStats = ({ canControl, onStart, onReset, onSave , onNewLap, onNewConfig, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0, current_lap = 1, remaining_time = 0 }) => {
+const RaceStats = ({ canControl, onStart, onReset, onSave , onNewLap, onNewConfig, running_time = 0, currentLapTime = 0, laps, average_time = 0, target_time = 0, current_lap = 1, remaining_time = 0, altitude = 0, num_sats = 0, airSpeed = 0 }) => {
     return (
         <div className='text-white p-2 rounded-xl shadow-lg w-full mx-auto h-full flex flex-col md:flex-row'>
             <div className="md:basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-2 min-w-0">
@@ -27,6 +27,23 @@ const RaceStats = ({ canControl, onStart, onReset, onSave , onNewLap, onNewConfi
                     <tr className="border-b border-gray-700">
                         <td className="py-1">Remaining time</td>
                         <td className="py-1">{remaining_time}</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <h2 className="text-xl font-semibold text-center m-2">Extra Data</h2>
+                <table className="w-full text-left table-auto">
+                    <tbody>
+                    <tr className="border-b border-gray-700">
+                        <td className="py-1">Altitude</td>
+                        <td className="py-1">{altitude}</td>
+                    </tr>
+                    <tr className="border-b border-gray-700">
+                        <td className="py-1">Number of satellites</td>
+                        <td className="py-1">{num_sats}</td>
+                    </tr>
+                    <tr className="border-b border-gray-700">
+                        <td className="py-1">Air speed</td>
+                        <td className="py-1">{airSpeed}</td>
                     </tr>
                     </tbody>
                 </table>

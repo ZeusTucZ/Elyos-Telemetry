@@ -23,11 +23,11 @@ const createTables = async () => {
         console.log("Connected to PostgreSQL");
 
         const query = `
-            DROP TABLE IF EXISTS lectures;
-            DROP TABLE IF EXISTS sessions;
-            DROP TABLE IF EXISTS configurations;
-            DROP TABLE IF EXISTS pilots;
-            DROP TABLE IF EXISTS laps;
+            DROP TABLE IF EXISTS laps CASCADE;
+            DROP TABLE IF EXISTS lectures CASCADE;
+            DROP TABLE IF EXISTS sessions CASCADE;
+            DROP TABLE IF EXISTS configurations CASCADE;
+            DROP TABLE IF EXISTS pilots CASCADE;
 
             CREATE TABLE IF NOT EXISTS pilots (
                 id SERIAL PRIMARY KEY,
@@ -72,7 +72,10 @@ const createTables = async () => {
                 velocity_x NUMERIC(6,2),
                 velocity_y NUMERIC(6,2),
                 ambient_temp NUMERIC(5,2),
-                steering_direction NUMERIC(6,2)
+                steering_direction NUMERIC(6,2),
+                altitude_m NUMERIC(6, 2),
+                num_sats NUMERIC(6, 2),
+                air_speed SMALLINT
             );
 
             CREATE TABLE IF NOT EXISTS laps (
