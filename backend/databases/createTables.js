@@ -74,8 +74,8 @@ const createTables = async () => {
                 ambient_temp NUMERIC(5,2),
                 steering_direction NUMERIC(6,2),
                 altitude_m NUMERIC(6, 2),
-                num_sats NUMERIC(6, 2),
-                air_speed SMALLINT
+                num_sats SMALLINT,
+                air_speed NUMERIC(6, 2)
             );
 
             CREATE TABLE IF NOT EXISTS laps (

@@ -328,9 +328,9 @@ const DashboardPage = () => {
             setTotalKm(prev => prev + (metersThisTick / 1000));
 
             // IMU data
-            setRoll(latest.roll);
-            setPitch(latest.pitch);
-            setYaw(latest.yaw);
+            setRoll(latest.orientation_x);
+            setPitch(latest.orientation_y);
+            setYaw(latest.orientation_z);
             setAccel_x(latest.acceleration_x);
             setAccel_y(latest.acceleration_y);
 
