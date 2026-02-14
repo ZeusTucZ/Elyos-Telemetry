@@ -254,7 +254,7 @@ const DashboardPage = () => {
 
     socket.emit("comando-admin", { accion: "RESET_RACE" });
     try {
-      await fetch(`${API_BASE}/api/record/reset`, { method: 'POST' });
+      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
     } catch (err) { console.error(err); }
   };
 
