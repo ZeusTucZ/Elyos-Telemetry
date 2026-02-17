@@ -283,6 +283,47 @@ const DashboardPage = () => {
     }
   }
 
+  const handleNewMessage = async () => {
+    if (!canControl) return;
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Escribir Mensaje',
+      input: 'textarea',
+      inputPlaceholder: 'Escribe tu mensaje aquí...',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar',
+      inputValidator: (value) => {
+        if (!value) return '¡El mensaje no puede estar vacío!';
+      }
+    });
+
+    if (formValues) {
+      const dataToSend = { message: formValues };
+
+      try {
+        const response = await fetch(`${API_BASE}/api/record/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataToSend),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // OPCIONAL: Avisar a los demás por Socket.io
+          socket.emit("send_message", dataToSend);
+
+          Swal.fire('¡Logrado!', 'Mensaje subido a la ruta correctamente', 'success');
+        } else {
+          throw new Error(data.error || 'Error en el servidor');
+        }
+      } catch (error) {
+        console.error("Error al enviar:", error);
+        Swal.fire('Error', 'No se pudo subir el mensaje', 'error');
+      }
+    }
+  }
+
   // Count the time
   useEffect(() => {
     let interval = null;
@@ -460,6 +501,7 @@ const DashboardPage = () => {
                     onSave={handleSave}
                     onNewLap={handleNewLap}
                     onNewConfig={handleSettingsUpdate}
+                    onNewMssage={handleNewMessage}
                     running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
                     currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
                     laps={laps}

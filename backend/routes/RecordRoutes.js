@@ -3,7 +3,9 @@ import {
     startRecording,
     stopRecording,
     statusRecording,
-    saveRecording
+    saveRecording,
+    sendMessage,
+    getMessage
 } from '../controllers/RecordController.js';
 
 const router = Router();
@@ -16,6 +18,12 @@ router.post('/pause', stopRecording);
 
 // Status recording
 router.get('/status', statusRecording);
+
+// Send message
+router.post('/message', sendMessage);
+
+// Get message
+router.get('/message', getMessage);
 
 // Save recording
 router.get('/save', saveRecording);
