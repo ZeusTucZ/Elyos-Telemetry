@@ -12,11 +12,14 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const currentHost = window.location.hostname;
-const socket = io(`http://${currentHost}:8080`);
+const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app:8080";
+const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
+const socket = io(BACKEND_ORIGIN, {
+  path: `${BACKEND_BASE_PATH}/socket.io`
+});
 
 const DashboardPage = () => {
-  const API_BASE = `http://${currentHost}:8080`;
+  const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
 
   // States
   const [canControl, setCanControl] = useState(false);
