@@ -12,7 +12,7 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app:8080";
+const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app";
 const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
 const socket = io(BACKEND_ORIGIN, {
   path: `${BACKEND_BASE_PATH}/socket.io`
