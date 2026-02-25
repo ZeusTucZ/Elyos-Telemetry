@@ -27,12 +27,6 @@ const createTables = async () => {
         console.log("Connected to PostgreSQL");
 
         const query = `
-            DROP TABLE IF EXISTS laps CASCADE;
-            DROP TABLE IF EXISTS lectures CASCADE;
-            DROP TABLE IF EXISTS sessions CASCADE;
-            DROP TABLE IF EXISTS configurations CASCADE;
-            DROP TABLE IF EXISTS pilots CASCADE;
-
             CREATE TABLE IF NOT EXISTS pilots (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100),
