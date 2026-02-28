@@ -12,6 +12,7 @@ import authRoutes from "./routes/AuthRoutes.js";
 
 const app = express();
 const BASE_PATH = '/elyos-telemetry-backend';
+const API_PREFIXES = ['/api', `${BASE_PATH}/api`];
 
 // Middlewares
 app.use(cors());
@@ -27,13 +28,15 @@ app.get('/', (_req, res) => {
   res.status(200).send('OK');
 });
 
-// DigitalOcean base path routes
-app.use(`${BASE_PATH}/api/lectures`, lectureRoutes);
-app.use(`${BASE_PATH}/api/pilots`, pilotRoutes);
-app.use(`${BASE_PATH}/api/configurations`, configurationRoutes);
-app.use(`${BASE_PATH}/api/sessions`, sessionRoutes);
-app.use(`${BASE_PATH}/api/laps`, lapRoutes);
-app.use(`${BASE_PATH}/api/record`, RecordRoutes);
-app.use(`${BASE_PATH}/api/auth`, authRoutes);
+// Support both direct "/api/*" and prefixed "/elyos-telemetry-backend/api/*" paths.
+for (const prefix of API_PREFIXES) {
+  app.use(`${prefix}/lectures`, lectureRoutes);
+  app.use(`${prefix}/pilots`, pilotRoutes);
+  app.use(`${prefix}/configurations`, configurationRoutes);
+  app.use(`${prefix}/sessions`, sessionRoutes);
+  app.use(`${prefix}/laps`, lapRoutes);
+  app.use(`${prefix}/record`, RecordRoutes);
+  app.use(`${prefix}/auth`, authRoutes);
+}
 
 export default app;

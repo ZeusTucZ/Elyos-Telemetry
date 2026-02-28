@@ -25,6 +25,7 @@ dotenv.config({ path: './env/.env' });
 
 const PORT = Number(process.env.PORT) || 8080;
 const BASE_PATH = '/elyos-telemetry-backend';
+const API_PREFIXES = ['/api', `${BASE_PATH}/api`];
 
 const server = http.createServer(app);
 
@@ -51,26 +52,28 @@ let vehicleParams = {
   gearRatio: 1.0
 };
 
-// Get vehicle params data
-app.get(`${BASE_PATH}/api/vehicle-params`, (req, res) => {
-  res.json(vehicleParams);
-});
+for (const prefix of API_PREFIXES) {
+  // Get vehicle params data
+  app.get(`${prefix}/vehicle-params`, (_req, res) => {
+    res.json(vehicleParams);
+  });
 
-// Update vehicle params data
-app.post(`${BASE_PATH}/api/vehicle-params`, (req, res) => {
-  const { motorId, gearRatio } = req.body;
+  // Update vehicle params data
+  app.post(`${prefix}/vehicle-params`, (req, res) => {
+    const { motorId, gearRatio } = req.body;
 
-  vehicleParams = {
-    motorId: motorId || vehicleParams.motorId,
-    gearRatio: gearRatio || vehicleParams.gearRatio
-  }
+    vehicleParams = {
+      motorId: motorId || vehicleParams.motorId,
+      gearRatio: gearRatio || vehicleParams.gearRatio
+    };
 
-  // Notify all devices
-  io.emit('params-updated', vehicleParams);
+    // Notify all devices
+    io.emit('params-updated', vehicleParams);
 
-  console.log("Updated values:", vehicleParams);
-  res.json({ message: "Success", current: vehicleParams });
-});
+    console.log("Updated values:", vehicleParams);
+    res.json({ message: "Success", current: vehicleParams });
+  });
+}
 
 io.on("connection", (socket) => {
   console.log(`📱 Devices connected: ${socket.id}`);
