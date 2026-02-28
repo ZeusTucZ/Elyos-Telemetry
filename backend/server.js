@@ -24,12 +24,10 @@ for (const name of Object.keys(nets)) {
 dotenv.config({ path: './env/.env' });
 
 const PORT = Number(process.env.PORT) || 8080;
-const BASE_PATH = '/elyos-telemetry-backend';
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  path: `${BASE_PATH}/socket.io`,
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
@@ -55,9 +53,6 @@ let vehicleParams = {
 app.get('/api/vehicle-params', (req, res) => {
   res.json(vehicleParams);
 });
-app.get(`${BASE_PATH}/api/vehicle-params`, (req, res) => {
-  res.json(vehicleParams);
-});
 
 // Update vehicle params data
 app.post('/api/vehicle-params', (req, res) => {
@@ -69,19 +64,6 @@ app.post('/api/vehicle-params', (req, res) => {
   }
 
   // Notify all devices
-  io.emit('params-updated', vehicleParams);
-
-  console.log("Updated values:", vehicleParams);
-  res.json({ message: "Success", current: vehicleParams });
-});
-app.post(`${BASE_PATH}/api/vehicle-params`, (req, res) => {
-  const { motorId, gearRatio } = req.body;
-
-  vehicleParams = {
-    motorId: motorId || vehicleParams.motorId,
-    gearRatio: gearRatio || vehicleParams.gearRatio
-  }
-
   io.emit('params-updated', vehicleParams);
 
   console.log("Updated values:", vehicleParams);

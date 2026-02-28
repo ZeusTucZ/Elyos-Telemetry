@@ -11,7 +11,6 @@ import RecordRoutes from "./routes/RecordRoutes.js";
 import authRoutes from "./routes/AuthRoutes.js";
 
 const app = express();
-const BASE_PATH = '/elyos-telemetry-backend';
 
 // Middlewares
 app.use(cors());
@@ -35,14 +34,5 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/laps', lapRoutes);
 app.use('/api/record', RecordRoutes);
 app.use('/api/auth', authRoutes);
-
-// DigitalOcean base path routes
-app.use(`${BASE_PATH}/api/lectures`, lectureRoutes);
-app.use(`${BASE_PATH}/api/pilots`, pilotRoutes);
-app.use(`${BASE_PATH}/api/configurations`, configurationRoutes);
-app.use(`${BASE_PATH}/api/sessions`, sessionRoutes);
-app.use(`${BASE_PATH}/api/laps`, lapRoutes);
-app.use(`${BASE_PATH}/api/record`, RecordRoutes);
-app.use(`${BASE_PATH}/api/auth`, authRoutes);
 
 export default app;

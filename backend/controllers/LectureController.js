@@ -8,7 +8,7 @@ export const getAllLectures = async (req, res) => {
     const result = await pool.query('SELECT * FROM lectures ORDER BY timestamp');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: `Error retrieving lectures: ${err}` });
+    res.status(500).json({ error: 'Error retrieving lectures' });
   }
 };
 
