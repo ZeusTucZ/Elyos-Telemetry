@@ -1,23 +1,5 @@
-import XLSX, { write } from 'xlsx';
-
-import { Pool } from 'pg';
-import { config } from 'dotenv';
-
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-config({ path: path.resolve(__dirname, '../env/.env') });
-
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+import XLSX from 'xlsx';
+import pool from '../config/dbConfig.js';
 
 async function getPostgresData() {
     try {
@@ -25,7 +7,6 @@ async function getPostgresData() {
         const result = await client.query('SELECT * FROM lectures');
         client.release();
         return result.rows;
-        client.release();
     } catch (err) {
         console.log('Error fetching data from PostgreSQL:', err);
         throw err;

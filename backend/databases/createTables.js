@@ -1,25 +1,7 @@
-import { Client } from "pg";
-import { config } from 'dotenv';
-
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-config({ path: path.resolve(__dirname, '../env/.env') });
-
-const client = new Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
+import pool from "../config/dbConfig.js";
 
 const createTables = async () => {
     try {
-        await client.connect();
         console.log("Connected to PostgreSQL");
 
         const query = `
@@ -88,12 +70,12 @@ const createTables = async () => {
             );
             `;
 
-            await client.query(query);
+            await pool.query(query);
             console.log('Tables created successfully!');
     } catch (err) {
         console.log('Error creating tables: ', err);
     } finally {
-        await client.end();
+        await pool.end();
         console.log('Disconnected')
     }
 }
