@@ -6,7 +6,10 @@ const MapUpdater = ({ position }) => {
 
   useEffect(() => {
     if (position && position.length === 2) {
-      map.setView(position, map.getZoom());
+      const [lat, lng] = position;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        map.setView(position, map.getZoom());
+      }
     }
   }, [position, map]);
 

@@ -386,8 +386,12 @@ const DashboardPage = () => {
             setVoltage(latest.voltage);
             setRpms(latest.rpms);
             setambient_temp(latest.ambient_temp);
-            setLatitud(latest.latitude);
-            setLongitud(latest.longitude);
+            const nextLat = Number(latest.latitude);
+            const nextLng = Number(latest.longitude);
+            if (Number.isFinite(nextLat) && Number.isFinite(nextLng)) {
+              setLatitud(nextLat);
+              setLongitud(nextLng);
+            }
 
             const dt = 1; // s
 
