@@ -15,7 +15,7 @@ import Battery from "../components/Battery";
 const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app";
 const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
 const socket = io(BACKEND_ORIGIN, {
-  path: `${BACKEND_BASE_PATH}/socket.io`
+  path: `${BACKEND_BASE_PATH}/api/socket.io`
 });
 
 const DashboardPage = () => {

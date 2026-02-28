@@ -29,7 +29,7 @@ const BASE_PATH = '/elyos-telemetry-backend';
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  path: `${BASE_PATH}/socket.io`,
+  path: `${BASE_PATH}/api/socket.io`,
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
