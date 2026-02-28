@@ -30,7 +30,7 @@ const API_PREFIXES = ['/api', `${BASE_PATH}/api`];
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  path: `/api/socket.io`,
+  path: `${BASE_PATH}/api/socket.io`,
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
