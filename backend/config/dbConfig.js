@@ -11,11 +11,19 @@ config({ path: path.resolve(__dirname, '../env/.env') });
 
 const isTrue = (value) => String(value).toLowerCase() === 'true';
 const isProduction = process.env.NODE_ENV === 'production';
+const sslMode = String(process.env.PGSSLMODE || '').toLowerCase();
+const hasSslModeInUrl = /[?&]sslmode=/i.test(process.env.DATABASE_URL || '');
+const shouldUseSsl =
+  isTrue(process.env.DB_SSL) || isProduction || hasSslModeInUrl || Boolean(sslMode);
+const strictSsl =
+  isTrue(process.env.DB_SSL_REJECT_UNAUTHORIZED) ||
+  sslMode === 'verify-ca' ||
+  sslMode === 'verify-full';
 
 const ssl =
-  isTrue(process.env.DB_SSL) || isProduction
+  shouldUseSsl
     ? {
-        rejectUnauthorized: isTrue(process.env.DB_SSL_REJECT_UNAUTHORIZED),
+        rejectUnauthorized: strictSsl,
       }
     : false;
 
