@@ -19,6 +19,27 @@ const socket = io(BACKEND_ORIGIN, {
   transports: ["websocket", "polling"],
 });
 
+socket.on("connect", () => {
+  console.log("[socket] connected", {
+    id: socket.id,
+    transport: socket.io.engine.transport.name,
+    path: `${BACKEND_BASE_PATH}/api/socket.io`
+  });
+});
+
+socket.on("connect_error", (error) => {
+  console.log("[socket] connect_error", {
+    message: error?.message,
+    description: error?.description,
+    context: error?.context,
+    type: error?.type
+  });
+});
+
+socket.on("disconnect", (reason) => {
+  console.log("[socket] disconnected", { reason });
+});
+
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
 
