@@ -219,6 +219,22 @@ const DashboardPage = () => {
     setTotalKm(0);
     setTotalWh(0);
     setCounter(0);
+    setVelocity_x(0);
+    setVelocity_y(0);
+    setCurrent(0);
+    setVoltage(0);
+    setRpms(0);
+    setambient_temp(0);
+    setRoll(0);
+    setPitch(0);
+    setYaw(0);
+    setAccel_x(0);
+    setAccel_y(0);
+    setLatitud(0);
+    setLongitud(0);
+    setAltitude(0);
+    setNumberOfSatellites(0);
+    setAirSpeed(0);
   }, [RACE_DURATION_SECONDS]);
 
   // Socket effects
@@ -280,6 +296,7 @@ const DashboardPage = () => {
     });
     if (!result.isConfirmed) return;
 
+    executeResetLogic();
     socket.emit("comando-admin", { accion: "RESET_RACE" });
     try {
       await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
