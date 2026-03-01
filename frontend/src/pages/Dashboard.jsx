@@ -383,8 +383,8 @@ const DashboardPage = () => {
             setVelocity_x(latest.velocity_x);
             setVelocity_y(latest.velocity_y);
             setCurrent(latest.current);
-            setVoltage(latest.voltage);
-            setRpms(latest.rpms);
+            setVoltage(latest.voltage_battery);
+            setRpms(latest.rpm_motor);
             setambient_temp(latest.ambient_temp);
             const nextLat = Number(latest.latitude);
             const nextLng = Number(latest.longitude);
@@ -396,13 +396,13 @@ const DashboardPage = () => {
             const dt = 1; // s
 
             // Energy eficiency
-            const powerW = latest.voltage * latest.current;
+            const powerW = latest.voltage_battery * latest.current;
             setTotalWh(prev => prev +  (powerW * dt) / 3600);
             setTotalAh(prev => prev + (latest.current * dt) / 3600);
 
             // Set distance
             const wheelCircM = Math.PI * WHEEL_DIAMETER_M; // m/rev
-            const wheelRpm = latest.rpms / gearRatio;     // rev/min
+            const wheelRpm = latest.rpm_motor / gearRatio;     // rev/min
             const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
             setTotalKm(prev => prev + (metersThisTick / 1000));
 
@@ -420,7 +420,7 @@ const DashboardPage = () => {
 
             const newEntry = {
               id: counter,
-              voltage: latest.voltage,
+              voltage: latest.voltage_battery,
               current: latest.current,
             };
 
