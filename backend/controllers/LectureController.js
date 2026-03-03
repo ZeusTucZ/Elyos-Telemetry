@@ -1,5 +1,6 @@
 import pool from '../config/dbConfig.js';
 import { getCurrentLapNumber } from '../raceStateStore.js';
+import { getIngestionEnabled } from '../dataIngestion.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -37,6 +38,10 @@ export const getLectureById = async (req, res) => {
 };
 
 export const createLecture = async (req, res) => {
+  if (!getIngestionEnabled()) {
+    return res.status(202).json({ skipped: true, message: 'Data ingestion is disabled' });
+  }
+
   const {
     session_id,
     lap_number,

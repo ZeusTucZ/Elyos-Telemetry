@@ -3,6 +3,8 @@ import {
     startRecording,
     stopRecording,
     statusRecording,
+    ingestionStatus,
+    setIngestionStatus,
     createNewLap,
     saveRecording,
     sendMessage,
@@ -19,6 +21,10 @@ router.post('/pause', stopRecording);
 
 // Status recording
 router.get('/status', statusRecording);
+
+// Ingestion state
+router.get('/ingestion', ingestionStatus);
+router.post('/ingestion', setIngestionStatus);
 
 // Create new lap
 router.post('/newLap', createNewLap);

@@ -45,6 +45,8 @@ const DashboardPage = () => {
 
   // States
   const [canControl, setCanControl] = useState(false);
+  const [ingestionEnabled, setIngestionEnabled] = useState(true);
+  const [ingestionLoading, setIngestionLoading] = useState(false);
 
   const [laps, setLaps] = useState([]);
   const [lapsNumber, setLapsNumber] = useState(1);
@@ -281,6 +283,21 @@ const DashboardPage = () => {
     fetchPermissions();
   }, [API_BASE]);
 
+  useEffect(() => {
+    const fetchIngestionStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/record/ingestion`);
+        if (!response.ok) return;
+        const data = await response.json();
+        setIngestionEnabled(Boolean(data.ingestionEnabled));
+      } catch (err) {
+        console.error("Error reading ingestion status:", err);
+      }
+    };
+
+    fetchIngestionStatus();
+  }, [API_BASE]);
+
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
@@ -332,6 +349,33 @@ const DashboardPage = () => {
       console.warn("Asegurate de iniciar el backend")
     }
   }
+
+  const handleToggleIngestion = async () => {
+    if (!canControl || ingestionLoading) return;
+
+    const nextValue = !ingestionEnabled;
+    setIngestionLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/record/ingestion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingestionEnabled: nextValue })
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to update ingestion status');
+      }
+
+      const data = await response.json();
+      setIngestionEnabled(Boolean(data.ingestionEnabled));
+    } catch (err) {
+      console.error("Error updating ingestion status:", err);
+      Swal.fire('Error', 'Could not change data ingestion state', 'error');
+    } finally {
+      setIngestionLoading(false);
+    }
+  };
 
   const handleNewMessage = async () => {
     if (!canControl) return;
@@ -562,6 +606,9 @@ const DashboardPage = () => {
                     onNewLap={handleNewLap}
                     onNewConfig={handleSettingsUpdate}
                     onNewMssage={handleNewMessage}
+                    onToggleIngestion={handleToggleIngestion}
+                    ingestionEnabled={ingestionEnabled}
+                    ingestionLoading={ingestionLoading}
                     running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
                     currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
                     laps={laps}
