@@ -119,6 +119,11 @@ const DashboardPage = () => {
       setRemainingTime(RACE_DURATION_SECONDS);
       setRaceStartTime(null);
       setLastLapStartTime(null);
+      setDataHistory([]);
+      setCounter(0);
+      setCurrent(0);
+      setVoltage(0);
+      setRpms(0);
       return;
     }
 
