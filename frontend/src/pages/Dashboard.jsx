@@ -42,6 +42,8 @@ socket.on("disconnect", (reason) => {
 
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
+  const DEFAULT_LATITUDE = 39.792149;
+  const DEFAULT_LONGITUDE = -86.238707;
 
   // States
   const [canControl, setCanControl] = useState(false);
@@ -90,8 +92,8 @@ const DashboardPage = () => {
   const [acceleration_y, setAccel_y] = useState(0);
 
   // Map GPS
-  const [latitude, setLatitud] = useState(0);
-  const [longitud, setLongitud] = useState(0);
+  const [latitude, setLatitud] = useState(DEFAULT_LATITUDE);
+  const [longitud, setLongitud] = useState(DEFAULT_LONGITUDE);
 
   // Extra variables
   const [altitude, setAltitude] = useState(0);
@@ -237,12 +239,12 @@ const DashboardPage = () => {
     setYaw(0);
     setAccel_x(0);
     setAccel_y(0);
-    setLatitud(0);
-    setLongitud(0);
+    setLatitud(DEFAULT_LATITUDE);
+    setLongitud(DEFAULT_LONGITUDE);
     setAltitude(0);
     setNumberOfSatellites(0);
     setAirSpeed(0);
-  }, [RACE_DURATION_SECONDS]);
+  }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS]);
 
   // Socket effects
   useEffect(() => {
@@ -304,6 +306,15 @@ const DashboardPage = () => {
     socket.emit("comando-admin", { accion: "START_RACE" });
     try {
       await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
+    } catch (err) { console.warn("Backend error", err); }
+  };
+
+  const handlePause = async () => {
+    if (!canControl) return;
+    setTimerActive(false);
+    setIsRunning(false);
+    try {
+      await fetch(`${API_BASE}/api/record/pause`, { method: "POST" });
     } catch (err) { console.warn("Backend error", err); }
   };
 
@@ -601,6 +612,7 @@ const DashboardPage = () => {
                   <RaceStats
                     canControl={canControl}
                     onStart={handleStart}
+                    onPause={handlePause}
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}

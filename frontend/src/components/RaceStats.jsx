@@ -1,6 +1,7 @@
 const RaceStats = ({
     canControl,
     onStart,
+    onPause,
     onReset,
     onSave,
     onNewLap,
@@ -81,12 +82,13 @@ const RaceStats = ({
             </div>
             {canControl && (
                 <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-3 shadow-lg m-1 min-w-0">
-                    <button onClick={onStart} className="bg-[#A6A8B2] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
-                    <button onClick={onNewLap} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
-                    <button onClick={onReset} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
-                    <button onClick={onSave} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
-                    <button onClick={onNewConfig} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Config car</button>
-                    <button onClick={onNewMssage} className="bg-[#A6A8B2] text-white px-4 py-2 rounded-lg w-full text-sm">Send message</button>
+                    <button onClick={onStart} className="bg-[#4B4E59] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
+                    <button onClick={onPause} className="bg-[#4B4E59] text-yellow-300 px-4 py-2 rounded-lg w-full text-sm">Pause</button>
+                    <button onClick={onNewLap} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
+                    <button onClick={onReset} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
+                    <button onClick={onSave} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
+                    <button onClick={onNewConfig} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Config car</button>
+                    <button onClick={onNewMssage} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Send message</button>
                     <button
                         onClick={onToggleIngestion}
                         disabled={ingestionLoading}

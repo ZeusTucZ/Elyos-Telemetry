@@ -15,11 +15,14 @@ const carIcon = new L.Icon({
   iconAnchor: [8, 8],
 });
 
-const MapGPS = ({ latitude = 0, longitud = 0 }) => {
+const DEFAULT_LATITUDE = 39.792149;
+const DEFAULT_LONGITUDE = -86.238707;
+
+const MapGPS = ({ latitude = DEFAULT_LATITUDE, longitud = DEFAULT_LONGITUDE }) => {
   const safeLat = Number(latitude);
   const safeLng = Number(longitud);
   const hasValidPosition = Number.isFinite(safeLat) && Number.isFinite(safeLng);
-  const mapCenter = hasValidPosition ? [safeLat, safeLng] : [0, 0];
+  const mapCenter = hasValidPosition ? [safeLat, safeLng] : [DEFAULT_LATITUDE, DEFAULT_LONGITUDE];
 
   return (
     <div className="w-full h-96 rounded-xl overflow-hidden">
