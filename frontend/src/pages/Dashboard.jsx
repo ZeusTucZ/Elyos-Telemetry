@@ -56,10 +56,12 @@ const DashboardPage = () => {
 
   const [runningTime, setRunningTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentLapTime, setCurrentLapTime] = useState(0);
   const [remaining_time, setRemainingTime] = useState(2100)
   const [raceStartTime, setRaceStartTime] = useState(null);
   const [lastLapStartTime, setLastLapStartTime] = useState(null);
+  const [pausedAt, setPausedAt] = useState(null);
 
   const showDashboard = true;
   const [isRunning, setIsRunning] = useState(false);
@@ -117,6 +119,8 @@ const DashboardPage = () => {
 
     if (!state?.isRunning) {
       setIsRunning(false);
+      setIsPaused(false);
+      setPausedAt(null);
       setTimerActive(false);
       setRunningTime(0);
       setCurrentLapTime(0);
@@ -138,6 +142,8 @@ const DashboardPage = () => {
     const elapsedCurrentLap = Math.max(0, Math.floor((now - lapStart) / 1000));
 
     setIsRunning(true);
+    setIsPaused(false);
+    setPausedAt(null);
     setTimerActive(true);
     setRaceStartTime(raceStart);
     setLastLapStartTime(lapStart);
@@ -244,6 +250,8 @@ const DashboardPage = () => {
     setAltitude(0);
     setNumberOfSatellites(0);
     setAirSpeed(0);
+    setIsPaused(false);
+    setPausedAt(null);
   }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS]);
 
   // Socket effects
@@ -303,16 +311,43 @@ const DashboardPage = () => {
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    setIsPaused(false);
+    setPausedAt(null);
     socket.emit("comando-admin", { accion: "START_RACE" });
     try {
       await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
     } catch (err) { console.warn("Backend error", err); }
   };
 
-  const handlePause = async () => {
+  const handlePauseToggle = async () => {
     if (!canControl) return;
+    if (isPaused) {
+      const now = Date.now();
+      const pauseDuration = pausedAt ? Math.max(0, now - pausedAt) : 0;
+
+      if (pauseDuration > 0) {
+        setRaceStartTime((prev) => (prev ? prev + pauseDuration : prev));
+        setLastLapStartTime((prev) => (prev ? prev + pauseDuration : prev));
+      }
+
+      setPausedAt(null);
+      setIsPaused(false);
+      setTimerActive(true);
+      setIsRunning(true);
+
+      try {
+        await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
+      } catch (err) { console.warn("Backend error", err); }
+      return;
+    }
+
+    if (!raceStartTime) return;
+
+    setPausedAt(Date.now());
+    setIsPaused(true);
     setTimerActive(false);
     setIsRunning(false);
+
     try {
       await fetch(`${API_BASE}/api/record/pause`, { method: "POST" });
     } catch (err) { console.warn("Backend error", err); }
@@ -612,7 +647,8 @@ const DashboardPage = () => {
                   <RaceStats
                     canControl={canControl}
                     onStart={handleStart}
-                    onPause={handlePause}
+                    onPauseToggle={handlePauseToggle}
+                    isPaused={isPaused}
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}

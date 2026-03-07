@@ -1,7 +1,8 @@
 const RaceStats = ({
     canControl,
     onStart,
-    onPause,
+    onPauseToggle,
+    isPaused = false,
     onReset,
     onSave,
     onNewLap,
@@ -83,7 +84,7 @@ const RaceStats = ({
             {canControl && (
                 <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-3 shadow-lg m-1 min-w-0">
                     <button onClick={onStart} className="bg-[#4B4E59] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
-                    <button onClick={onPause} className="bg-[#4B4E59] text-yellow-300 px-4 py-2 rounded-lg w-full text-sm">Pause</button>
+                    <button onClick={onPauseToggle} className="bg-[#4B4E59] text-yellow-300 px-4 py-2 rounded-lg w-full text-sm">{isPaused ? 'Resume' : 'Pause'}</button>
                     <button onClick={onNewLap} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
                     <button onClick={onReset} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
                     <button onClick={onSave} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
