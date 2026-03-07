@@ -1,13 +1,34 @@
 import pool from '../config/dbConfig.js';
 import { getCurrentLapNumber } from '../raceStateStore.js';
 import { getIngestionEnabled } from '../dataIngestion.js';
+import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
 export const getAllLectures = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM lectures ORDER BY timestamp');
-    res.json(result.rows);
+    const dbLectures = result.rows;
+    const latestLiveLecture = getLatestLecture();
+
+    if (!latestLiveLecture) {
+      return res.json(dbLectures);
+    }
+
+    if (dbLectures.length === 0) {
+      return res.json([latestLiveLecture]);
+    }
+
+    const latestDbLecture = dbLectures[dbLectures.length - 1];
+    if (
+      latestLiveLecture.id !== null &&
+      latestLiveLecture.id !== undefined &&
+      latestDbLecture.id === latestLiveLecture.id
+    ) {
+      return res.json(dbLectures);
+    }
+
+    res.json([...dbLectures, latestLiveLecture]);
   } catch (err) {
     res.status(500).json({ error: `Error retrieving lectures: ${err}` });
   }
@@ -38,10 +59,6 @@ export const getLectureById = async (req, res) => {
 };
 
 export const createLecture = async (req, res) => {
-  if (!getIngestionEnabled()) {
-    return res.status(202).json({ skipped: true, message: 'Data ingestion is disabled' });
-  }
-
   const {
     session_id,
     lap_number,
@@ -84,6 +101,41 @@ export const createLecture = async (req, res) => {
     normalizedLapNumber = parsedLapNumber;
   }
 
+  const liveLecture = {
+    id: null,
+    session_id: toNull(session_id),
+    lap_number: normalizedLapNumber,
+    timestamp: normalizedTimestamp,
+    voltage_battery: toNull(voltage_battery),
+    current: toNull(current),
+    latitude: toNull(latitude),
+    longitude: toNull(longitude),
+    acceleration_x: toNull(acceleration_x),
+    acceleration_y: toNull(acceleration_y),
+    acceleration_z: toNull(acceleration_z),
+    orientation_x: toNull(orientation_x),
+    orientation_y: toNull(orientation_y),
+    orientation_z: toNull(orientation_z),
+    rpm_motor: toNull(rpm_motor),
+    velocity_x: toNull(velocity_x),
+    velocity_y: toNull(velocity_y),
+    ambient_temp: toNull(ambient_temp),
+    steering_direction: toNull(steering_direction),
+    altitude_m: toNull(altitude_m),
+    num_sats: toNull(num_sats),
+    air_speed: toNull(air_speed)
+  };
+
+  setLatestLecture(liveLecture);
+
+  if (!getIngestionEnabled()) {
+    return res.status(200).json({
+      message: 'Lecture accepted for live mode (not persisted)',
+      persisted: false,
+      lecture: liveLecture
+    });
+  }
+
   try {
     const result = await pool.query(
       `INSERT INTO lectures (
@@ -107,6 +159,7 @@ export const createLecture = async (req, res) => {
         toNull(altitude_m), toNull(num_sats), toNull(air_speed)
       ]
     );
+    setLatestLecture(result.rows[0]);
     res.status(201).json(result.rows[0]);
     
   } catch (err) {

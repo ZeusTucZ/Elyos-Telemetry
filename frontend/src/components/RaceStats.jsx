@@ -92,7 +92,7 @@ const RaceStats = ({
                         disabled={ingestionLoading}
                         className={`px-4 py-2 rounded-lg w-full text-sm font-semibold ${ingestionEnabled ? 'bg-green-600 text-white' : 'bg-red-600 text-white'} ${ingestionLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
-                        DB Write: {ingestionEnabled ? 'ON' : 'OFF'}
+                        DB: {ingestionEnabled ? 'ON' : 'OFF'}
                     </button>
                 </div>
             )}
