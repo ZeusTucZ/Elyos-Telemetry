@@ -124,6 +124,7 @@ const DashboardPage = () => {
   const [numberOfSatellites, setNumberOfSatellites] = useState(0);
   const [airSpeed, setAirSpeed] = useState(0);
   const lastProcessedLectureKeyRef = useRef(null);
+  const autoResetTriggeredRef = useRef(false);
 
   const RACE_DURATION_SECONDS = 2100;
 
@@ -155,6 +156,7 @@ const DashboardPage = () => {
       setVoltage(0);
       setRpms(0);
       lastProcessedLectureKeyRef.current = null;
+      autoResetTriggeredRef.current = false;
       return;
     }
 
@@ -173,6 +175,7 @@ const DashboardPage = () => {
     setRunningTime(elapsedSeconds);
     setCurrentLapTime(elapsedCurrentLap);
     setRemainingTime(Math.max(0, RACE_DURATION_SECONDS - elapsedSeconds));
+    autoResetTriggeredRef.current = false;
   }, [calculateAverageLapTime]);
 
   // Enter initial state
@@ -275,6 +278,7 @@ const DashboardPage = () => {
     setIsPaused(false);
     setPausedAt(null);
     lastProcessedLectureKeyRef.current = null;
+    autoResetTriggeredRef.current = false;
   }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS]);
 
   // Socket effects
@@ -331,9 +335,39 @@ const DashboardPage = () => {
     fetchIngestionStatus();
   }, [API_BASE]);
 
+  const updateIngestionStatus = useCallback(async (nextValue) => {
+    const response = await fetch(`${API_BASE}/api/record/ingestion`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingestionEnabled: nextValue })
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to update ingestion status');
+    }
+
+    const data = await response.json();
+    const nextState = Boolean(data.ingestionEnabled);
+    setIngestionEnabled(nextState);
+    return nextState;
+  }, [API_BASE]);
+
+  const performReset = useCallback(async () => {
+    executeResetLogic();
+    socket.emit("comando-admin", { accion: "RESET_RACE" });
+
+    try {
+      await updateIngestionStatus(false);
+      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [API_BASE, executeResetLogic, updateIngestionStatus]);
+
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    autoResetTriggeredRef.current = false;
     setIsPaused(false);
     setPausedAt(null);
     socket.emit("comando-admin", { accion: "START_RACE" });
@@ -372,6 +406,7 @@ const DashboardPage = () => {
     setIsRunning(false);
 
     try {
+      await updateIngestionStatus(false);
       await fetch(`${API_BASE}/api/record/pause`, { method: "POST" });
     } catch (err) { console.warn("Backend error", err); }
   };
@@ -387,11 +422,7 @@ const DashboardPage = () => {
     });
     if (!result.isConfirmed) return;
 
-    executeResetLogic();
-    socket.emit("comando-admin", { accion: "RESET_RACE" });
-    try {
-      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
-    } catch (err) { console.error(err); }
+    await performReset();
   };
 
   const handleNewLap = async () => {
@@ -426,18 +457,7 @@ const DashboardPage = () => {
     setIngestionLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/record/ingestion`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingestionEnabled: nextValue })
-      });
-
-      if (!response.ok) {
-        throw new Error('Unable to update ingestion status');
-      }
-
-      const data = await response.json();
-      setIngestionEnabled(Boolean(data.ingestionEnabled));
+      await updateIngestionStatus(nextValue);
     } catch (err) {
       console.error("Error updating ingestion status:", err);
       Swal.fire('Error', 'Could not change data ingestion state', 'error');
@@ -495,13 +515,25 @@ const DashboardPage = () => {
         const now = Date.now();
         const elapsedSeconds = Math.max(0, Math.floor((now - raceStartTime) / 1000));
         const elapsedCurrentLap = Math.max(0, Math.floor((now - (lastLapStartTime ?? raceStartTime)) / 1000));
+
+        if (elapsedSeconds >= RACE_DURATION_SECONDS) {
+          if (!autoResetTriggeredRef.current) {
+            autoResetTriggeredRef.current = true;
+            performReset().catch((err) => {
+              console.error("Error auto-resetting race:", err);
+              autoResetTriggeredRef.current = false;
+            });
+          }
+          return;
+        }
+
         setRunningTime(elapsedSeconds);
         setRemainingTime(Math.max(0, RACE_DURATION_SECONDS - elapsedSeconds));
         setCurrentLapTime(elapsedCurrentLap);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [timerActive, raceStartTime, lastLapStartTime, RACE_DURATION_SECONDS]);
+  }, [timerActive, raceStartTime, lastLapStartTime, RACE_DURATION_SECONDS, performReset]);
 
   useEffect(() => {
     if (!showDashboard || !isRunning) return;
