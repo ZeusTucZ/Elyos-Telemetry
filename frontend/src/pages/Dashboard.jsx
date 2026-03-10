@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { io } from "socket.io-client";
 import Swal from 'sweetalert2';
@@ -40,6 +40,29 @@ socket.on("disconnect", (reason) => {
   console.log("[socket] disconnected", { reason });
 });
 
+const getLectureSampleKey = (lecture) => {
+  if (!lecture) return null;
+
+  if (lecture.id !== null && lecture.id !== undefined) {
+    return `id:${lecture.id}`;
+  }
+
+  if (lecture.timestamp) {
+    return `ts:${lecture.timestamp}`;
+  }
+
+  return [
+    lecture.lap_number,
+    lecture.voltage_battery,
+    lecture.current,
+    lecture.rpm_motor,
+    lecture.velocity_x,
+    lecture.velocity_y,
+    lecture.latitude,
+    lecture.longitude
+  ].join("|");
+};
+
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
   const DEFAULT_LATITUDE = 39.792149;
@@ -74,7 +97,6 @@ const DashboardPage = () => {
   const [rpm_motor, setRpms] = useState(0);
   const [ambient_temp, setambient_temp] = useState(0);
   const [dataHistory, setDataHistory] = useState([]);
-  const [counter, setCounter] = useState(0);
 
   // Special variables
   const [totalWh, setTotalWh] = useState(0);
@@ -101,6 +123,7 @@ const DashboardPage = () => {
   const [altitude, setAltitude] = useState(0);
   const [numberOfSatellites, setNumberOfSatellites] = useState(0);
   const [airSpeed, setAirSpeed] = useState(0);
+  const lastProcessedLectureKeyRef = useRef(null);
 
   const RACE_DURATION_SECONDS = 2100;
 
@@ -128,10 +151,10 @@ const DashboardPage = () => {
       setRaceStartTime(null);
       setLastLapStartTime(null);
       setDataHistory([]);
-      setCounter(0);
       setCurrent(0);
       setVoltage(0);
       setRpms(0);
+      lastProcessedLectureKeyRef.current = null;
       return;
     }
 
@@ -233,7 +256,6 @@ const DashboardPage = () => {
     setTotalAh(0);
     setTotalKm(0);
     setTotalWh(0);
-    setCounter(0);
     setVelocity_x(0);
     setVelocity_y(0);
     setCurrent(0);
@@ -252,6 +274,7 @@ const DashboardPage = () => {
     setAirSpeed(0);
     setIsPaused(false);
     setPausedAt(null);
+    lastProcessedLectureKeyRef.current = null;
   }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS]);
 
   // Socket effects
@@ -489,6 +512,10 @@ const DashboardPage = () => {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const latest = data[data.length - 1];
+            const lectureKey = getLectureSampleKey(latest);
+            const isNewLecture =
+              lectureKey !== null && lectureKey !== lastProcessedLectureKeyRef.current;
+
             if (Number.isInteger(latest.lap_number) && latest.lap_number > 0) {
               setLapsNumber(latest.lap_number);
             }
@@ -504,6 +531,12 @@ const DashboardPage = () => {
               setLatitud(nextLat);
               setLongitud(nextLng);
             }
+
+            if (!isNewLecture) {
+              return;
+            }
+
+            lastProcessedLectureKeyRef.current = lectureKey;
 
             const dt = 1; // s
 
@@ -531,20 +564,19 @@ const DashboardPage = () => {
             setAirSpeed(latest.air_speed);
 
             const newEntry = {
-              id: counter,
+              id: lectureKey,
               voltage: latest.voltage_battery,
               current: latest.current,
             };
 
             setDataHistory((prev) => [...prev.slice(-19), newEntry]);
-            setCounter((prev) => prev + 1);
           }
         })
         .catch((err) => console.error("Error fetching data:", err));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [counter, showDashboard, isRunning, API_BASE, gearRatio]);
+  }, [showDashboard, isRunning, API_BASE, gearRatio]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
