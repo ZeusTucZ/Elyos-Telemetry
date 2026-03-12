@@ -63,6 +63,20 @@ const getLectureSampleKey = (lecture) => {
   ].join("|");
 };
 
+const getLectureDisplayTime = (lecture) => {
+  const fallbackDate = new Date();
+  const parsedDate = lecture?.timestamp ? new Date(lecture.timestamp) : fallbackDate;
+  const isValidTimestamp =
+    !Number.isNaN(parsedDate.getTime()) && parsedDate.getUTCFullYear() >= 2000;
+  const displayDate = isValidTimestamp ? parsedDate : fallbackDate;
+
+  return displayDate.toLocaleTimeString([], {
+    hour12: false,
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
+
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
   const DEFAULT_LATITUDE = 39.792149;
@@ -597,6 +611,7 @@ const DashboardPage = () => {
 
             const newEntry = {
               id: lectureKey,
+              timeLabel: getLectureDisplayTime(latest),
               voltage: latest.voltage_battery,
               current: latest.current,
             };
