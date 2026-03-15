@@ -13,15 +13,15 @@ const IMUdata = ({ roll = 0, pitch = 0, yaw = 0, accel_x = 0, accel_y = 0}) => {
                 <tbody>
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Roll</td>
-                    <td className="py-1">{roll} A</td>
+                    <td className="py-1">{roll} °</td>
                 </tr>
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Pitch</td>
-                    <td className="py-1">{pitch} V</td>
+                    <td className="py-1">{pitch} °</td>
                 </tr>
                 <tr className="border-b border-gray-700">
                     <td className="py-1">Yaw</td>
-                    <td className="py-1">{yaw}</td>
+                    <td className="py-1">{yaw} °</td>
                 </tr>
                 </tbody>
                 <thead>
