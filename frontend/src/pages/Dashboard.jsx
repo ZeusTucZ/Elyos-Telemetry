@@ -147,6 +147,17 @@ const DashboardPage = () => {
     return lapsArray.reduce((acc, lap) => acc + lap, 0) / lapsArray.length;
   }, []);
 
+  const resetConsumptionStats = useCallback(() => {
+    setDataHistory([]);
+    setTotalAh(0);
+    setTotalKm(0);
+    setTotalWh(0);
+    setCurrent(0);
+    setVoltage(0);
+    setRpms(0);
+    lastProcessedLectureKeyRef.current = null;
+  }, []);
+
   const syncRaceState = useCallback((state) => {
     const lapsFromState = state?.laps ?? [];
     const lapsNumberFromState = state?.lapsNumber ?? 1;
@@ -165,11 +176,7 @@ const DashboardPage = () => {
       setRemainingTime(RACE_DURATION_SECONDS);
       setRaceStartTime(null);
       setLastLapStartTime(null);
-      setDataHistory([]);
-      setCurrent(0);
-      setVoltage(0);
-      setRpms(0);
-      lastProcessedLectureKeyRef.current = null;
+      resetConsumptionStats();
       autoResetTriggeredRef.current = false;
       return;
     }
@@ -190,7 +197,7 @@ const DashboardPage = () => {
     setCurrentLapTime(elapsedCurrentLap);
     setRemainingTime(Math.max(0, RACE_DURATION_SECONDS - elapsedSeconds));
     autoResetTriggeredRef.current = false;
-  }, [calculateAverageLapTime]);
+  }, [RACE_DURATION_SECONDS, calculateAverageLapTime, resetConsumptionStats]);
 
   // Enter initial state
   useEffect(() => {
@@ -269,15 +276,9 @@ const DashboardPage = () => {
     setLapsNumber(1);
     setRaceStartTime(null);
     setLastLapStartTime(null);
-    setDataHistory([]);
-    setTotalAh(0);
-    setTotalKm(0);
-    setTotalWh(0);
+    resetConsumptionStats();
     setVelocity_x(0);
     setVelocity_y(0);
-    setCurrent(0);
-    setVoltage(0);
-    setRpms(0);
     setambient_temp(0);
     setRoll(0);
     setPitch(0);
@@ -291,15 +292,17 @@ const DashboardPage = () => {
     setAirSpeed(0);
     setIsPaused(false);
     setPausedAt(null);
-    lastProcessedLectureKeyRef.current = null;
     autoResetTriggeredRef.current = false;
-  }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS]);
+  }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS, resetConsumptionStats]);
 
   // Socket effects
   useEffect(() => {
     socket.on("ejecutar-accion", (data) => {
       console.log("Acción remota recibida:", data.accion);
       if (data.state) {
+        if (data.accion === "START_RACE" || data.accion === "RESET_RACE") {
+          resetConsumptionStats();
+        }
         syncRaceState(data.state);
         return;
       }
@@ -309,7 +312,7 @@ const DashboardPage = () => {
       }
     });
     return () => socket.off("ejecutar-accion");
-  }, [executeResetLogic, syncRaceState]);
+  }, [executeResetLogic, resetConsumptionStats, syncRaceState]);
 
   // Check authentication
   useEffect(() => {
@@ -381,6 +384,7 @@ const DashboardPage = () => {
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    resetConsumptionStats();
     autoResetTriggeredRef.current = false;
     setIsPaused(false);
     setPausedAt(null);
@@ -665,12 +669,12 @@ const DashboardPage = () => {
             >
               {/* móvil: horizontal */}
               <div className="w-full h-full md:hidden">
-                <Battery percentage={4 * voltage_battery} orientation="horizontal" />
+                <Battery percentage={100 * voltage_battery / 51} orientation="horizontal" />
               </div>
 
               {/* md+: vertical */}
               <div className="hidden md:block w-full h-full">
-                <Battery percentage={4 * voltage_battery} orientation="vertical" />
+                <Battery percentage={100 * voltage_battery / 51} orientation="vertical" />
               </div>
             </div>
 
