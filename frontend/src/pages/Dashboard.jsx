@@ -63,18 +63,16 @@ const getLectureSampleKey = (lecture) => {
   ].join("|");
 };
 
-const getLectureDisplayTime = (lecture) => {
-  const fallbackDate = new Date();
-  const parsedDate = lecture?.timestamp ? new Date(lecture.timestamp) : fallbackDate;
-  const isValidTimestamp =
-    !Number.isNaN(parsedDate.getTime()) && parsedDate.getUTCFullYear() >= 2000;
-  const displayDate = isValidTimestamp ? parsedDate : fallbackDate;
+const createZeroChartEntry = () => ({
+  id: "start-point",
+  timeSeconds: 0,
+  voltage: 0,
+  current: 0,
+});
 
-  return displayDate.toLocaleTimeString([], {
-    hour12: false,
-    minute: "2-digit",
-    second: "2-digit",
-  });
+const formatDuration = (totalSeconds) => {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds || 0));
+  return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
 };
 
 const DashboardPage = () => {
@@ -183,18 +181,23 @@ const DashboardPage = () => {
       return;
     }
 
-    const now = Date.now();
-    const raceStart = state.startTime ?? now;
-    const lapStart = state.lastLapStartTime ?? raceStart;
-    const elapsedSeconds = Math.max(0, Math.floor((now - raceStart) / 1000));
-    const elapsedCurrentLap = Math.max(0, Math.floor((now - lapStart) / 1000));
+    const clientNow = Date.now();
+    const serverNow = typeof state?.serverNow === "number" ? state.serverNow : clientNow;
+    const raceStartServer = typeof state?.startTime === "number" ? state.startTime : serverNow;
+    const lapStartServer = typeof state?.lastLapStartTime === "number" ? state.lastLapStartTime : raceStartServer;
+    const elapsedMilliseconds = Math.max(0, serverNow - raceStartServer);
+    const elapsedCurrentLapMilliseconds = Math.max(0, serverNow - lapStartServer);
+    const normalizedRaceStart = clientNow - elapsedMilliseconds;
+    const normalizedLapStart = clientNow - elapsedCurrentLapMilliseconds;
+    const elapsedSeconds = Math.max(0, Math.floor(elapsedMilliseconds / 1000));
+    const elapsedCurrentLap = Math.max(0, Math.floor(elapsedCurrentLapMilliseconds / 1000));
 
     setIsRunning(true);
     setIsPaused(false);
     setPausedAt(null);
     setTimerActive(true);
-    setRaceStartTime(raceStart);
-    setLastLapStartTime(lapStart);
+    setRaceStartTime(normalizedRaceStart);
+    setLastLapStartTime(normalizedLapStart);
     setRunningTime(elapsedSeconds);
     setCurrentLapTime(elapsedCurrentLap);
     setRemainingTime(Math.max(0, RACE_DURATION_SECONDS - elapsedSeconds));
@@ -386,10 +389,22 @@ const DashboardPage = () => {
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    const now = Date.now();
     resetConsumptionStats();
     autoResetTriggeredRef.current = false;
     setIsPaused(false);
     setPausedAt(null);
+    setIsRunning(true);
+    setTimerActive(true);
+    setRunningTime(0);
+    setCurrentLapTime(0);
+    setRemainingTime(RACE_DURATION_SECONDS);
+    setRaceStartTime(now);
+    setLastLapStartTime(now);
+    setDataHistory([createZeroChartEntry()]);
+    setLaps([]);
+    setLapsNumber(1);
+    setAverageLapTime(0);
     socket.emit("comando-admin", { accion: "START_RACE" });
     try {
       await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
@@ -616,9 +631,13 @@ const DashboardPage = () => {
             setNumberOfSatellites(latest.num_sats);
             setAirSpeed(latest.air_speed);
 
+            const elapsedHistorySeconds = raceStartTime
+              ? Math.max(0, Math.floor((Date.now() - raceStartTime) / 1000))
+              : 0;
+
             const newEntry = {
               id: lectureKey,
-              timeLabel: getLectureDisplayTime(latest),
+              timeSeconds: elapsedHistorySeconds,
               voltage: latest.voltage_battery,
               current: latest.current,
             };
@@ -630,7 +649,7 @@ const DashboardPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showDashboard, isRunning, API_BASE, gearRatio]);
+  }, [showDashboard, isRunning, API_BASE, gearRatio, raceStartTime]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
@@ -744,12 +763,12 @@ const DashboardPage = () => {
                     onToggleIngestion={handleToggleIngestion}
                     ingestionEnabled={ingestionEnabled}
                     ingestionLoading={ingestionLoading}
-                    running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
-                    currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
+                    running_time={formatDuration(runningTime)}
+                    currentLapTime={formatDuration(currentLapTime)}
                     laps={laps}
-                    average_time={averageLapTime.toFixed(2)}
+                    average_time={formatDuration(averageLapTime)}
                     current_lap={lapsNumber}
-                    remaining_time={`${Math.floor(remaining_time / 60)}:${("0" + (remaining_time % 60)).slice(-2)}`}
+                    remaining_time={formatDuration(remaining_time)}
                     altitude={altitude}
                     num_sats={numberOfSatellites}
                     airSpeed={airSpeed}
