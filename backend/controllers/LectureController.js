@@ -1,6 +1,7 @@
 import pool from '../config/dbConfig.js';
 import { getCurrentLapNumber } from '../raceStateStore.js';
 import { getIngestionEnabled } from '../dataIngestion.js';
+import { getIsRunning } from '../isRunning.js';
 import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
 
@@ -133,7 +134,7 @@ export const createLecture = async (req, res) => {
 
   setLatestLecture(liveLecture);
 
-  if (!getIngestionEnabled()) {
+  if (!getIngestionEnabled() || !getIsRunning()) {
     return res.status(200).json({
       message: 'Lecture accepted for live mode (not persisted)',
       persisted: false,
