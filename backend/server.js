@@ -58,6 +58,11 @@ const emitToAllSockets = (eventName, payload) => {
   }
 };
 
+const getRaceStatePayload = () => ({
+  ...raceState,
+  serverNow: Date.now()
+});
+
 // Global state of the race
 let raceState = {
   isRunning: false, // Start the program
@@ -101,7 +106,7 @@ for (const { io, socketPath } of socketServers) {
     console.log(`📱 Devices connected: ${socket.id} via ${socketPath}`);
 
     socket.emit("params-updated", vehicleParams);
-    socket.emit("init-state", raceState);
+    socket.emit("init-state", getRaceStatePayload());
 
     socket.on("comando-admin", (data) => {
       console.log("Order received from admin:", data.accion);
@@ -129,7 +134,7 @@ for (const { io, socketPath } of socketServers) {
         incrementCurrentLapNumber();
       }
 
-      emitToAllSockets("ejecutar-accion", { accion: data.accion, state: raceState });
+      emitToAllSockets("ejecutar-accion", { accion: data.accion, state: getRaceStatePayload() });
     });
 
     socket.on("disconnect", () => {

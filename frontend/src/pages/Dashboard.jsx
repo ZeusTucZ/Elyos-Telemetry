@@ -181,18 +181,23 @@ const DashboardPage = () => {
       return;
     }
 
-    const now = Date.now();
-    const raceStart = state.startTime ?? now;
-    const lapStart = state.lastLapStartTime ?? raceStart;
-    const elapsedSeconds = Math.max(0, Math.floor((now - raceStart) / 1000));
-    const elapsedCurrentLap = Math.max(0, Math.floor((now - lapStart) / 1000));
+    const clientNow = Date.now();
+    const serverNow = typeof state?.serverNow === "number" ? state.serverNow : clientNow;
+    const raceStartServer = typeof state?.startTime === "number" ? state.startTime : serverNow;
+    const lapStartServer = typeof state?.lastLapStartTime === "number" ? state.lastLapStartTime : raceStartServer;
+    const elapsedMilliseconds = Math.max(0, serverNow - raceStartServer);
+    const elapsedCurrentLapMilliseconds = Math.max(0, serverNow - lapStartServer);
+    const normalizedRaceStart = clientNow - elapsedMilliseconds;
+    const normalizedLapStart = clientNow - elapsedCurrentLapMilliseconds;
+    const elapsedSeconds = Math.max(0, Math.floor(elapsedMilliseconds / 1000));
+    const elapsedCurrentLap = Math.max(0, Math.floor(elapsedCurrentLapMilliseconds / 1000));
 
     setIsRunning(true);
     setIsPaused(false);
     setPausedAt(null);
     setTimerActive(true);
-    setRaceStartTime(raceStart);
-    setLastLapStartTime(lapStart);
+    setRaceStartTime(normalizedRaceStart);
+    setLastLapStartTime(normalizedLapStart);
     setRunningTime(elapsedSeconds);
     setCurrentLapTime(elapsedCurrentLap);
     setRemainingTime(Math.max(0, RACE_DURATION_SECONDS - elapsedSeconds));
@@ -384,10 +389,21 @@ const DashboardPage = () => {
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    const now = Date.now();
     resetConsumptionStats();
     autoResetTriggeredRef.current = false;
     setIsPaused(false);
     setPausedAt(null);
+    setIsRunning(true);
+    setTimerActive(true);
+    setRunningTime(0);
+    setCurrentLapTime(0);
+    setRemainingTime(RACE_DURATION_SECONDS);
+    setRaceStartTime(now);
+    setLastLapStartTime(now);
+    setLaps([]);
+    setLapsNumber(1);
+    setAverageLapTime(0);
     socket.emit("comando-admin", { accion: "START_RACE" });
     try {
       await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
