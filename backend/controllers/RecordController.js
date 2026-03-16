@@ -2,24 +2,46 @@ import { setIsRunning, getIsRunning } from '../isRunning.js';
 import { getIngestionEnabled, setIngestionEnabled } from '../dataIngestion.js';
 import pool from '../config/dbConfig.js';
 import buildLecturesXlsxBuffer from '../excel/export.js';
+import {
+    getCurrentSessionId,
+    setCurrentSessionId,
+    clearCurrentSessionId
+} from '../currentSessionStore.js';
 
 let lastMessage = "";
 
 // Start recording
 export const startRecording = async (req, res) => {
+    const { session_id } = req.body ?? {};
+
+    if (session_id !== undefined && session_id !== null && session_id !== '') {
+        const parsedSessionId = Number(session_id);
+        if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+            return res.status(400).json({ error: 'session_id must be a positive integer' });
+        }
+
+        setCurrentSessionId(parsedSessionId);
+    }
+
     setIsRunning(true);
-    res.json({ message: 'Recording started' });
+    res.json({ message: 'Recording started', session_id: getCurrentSessionId() });
 };
 
 // Stop recording
 export const stopRecording = async (req, res) => {
+    const { clearSession = false } = req.body ?? {};
+
     setIsRunning(false);
-    res.json({ message: 'Recording stopped' });
+    if (clearSession) {
+        clearCurrentSessionId();
+    }
+
+    res.json({ message: 'Recording stopped', session_id: getCurrentSessionId() });
 };
 
 // Status recording
 export const statusRecording = async (req, res) => {
-    res.json({ isRunning: getIsRunning() });
+    res.json({ isRunning: getIsRunning(), session_id: getCurrentSessionId() });
 };
 
 // Ingestion status

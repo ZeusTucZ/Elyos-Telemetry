@@ -33,7 +33,10 @@ const createTables = async () => {
                 pilot_id INTEGER REFERENCES pilots(id) ON DELETE CASCADE,
                 date DATE,
                 duration INTERVAL,
-                description TEXT
+                description TEXT,
+                session_type VARCHAR(20) NOT NULL DEFAULT 'real' CHECK (session_type IN ('test', 'real')),
+                session_group_id VARCHAR(100),
+                run_number INTEGER CHECK (run_number IS NULL OR run_number > 0)
             );
 
             CREATE TABLE IF NOT EXISTS lectures (

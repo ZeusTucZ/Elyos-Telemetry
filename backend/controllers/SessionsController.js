@@ -7,8 +7,25 @@ export const createSession = async (req, res) => {
     const {
         pilot_id,
         duration,
-        description
+        description,
+        session_type,
+        session_group_id,
+        run_number
     } = req.body;
+
+    const normalizedSessionType = session_type ?? 'real';
+    if (!['test', 'real'].includes(normalizedSessionType)) {
+        return res.status(400).json({ error: 'session_type must be either "test" or "real"' });
+    }
+
+    let normalizedRunNumber = null;
+    if (run_number !== undefined && run_number !== null && run_number !== '') {
+        const parsedRunNumber = Number(run_number);
+        if (!Number.isInteger(parsedRunNumber) || parsedRunNumber <= 0) {
+            return res.status(400).json({ error: 'run_number must be a positive integer' });
+        }
+        normalizedRunNumber = parsedRunNumber;
+    }
 
     try {
         const result = await pool.query(
@@ -16,12 +33,20 @@ export const createSession = async (req, res) => {
                 pilot_id,
                 date,
                 duration,
-                description
+                description,
+                session_type,
+                session_group_id,
+                run_number
             ) VALUES (
-             $1, NOW(), $2, $3
+             $1, NOW(), $2, $3, $4, $5, $6
             ) RETURNING *`,
             [
-                toNull(pilot_id), toNull(duration), toNull(description)
+                toNull(pilot_id),
+                toNull(duration),
+                toNull(description),
+                normalizedSessionType,
+                toNull(session_group_id),
+                normalizedRunNumber
             ]
         )
 

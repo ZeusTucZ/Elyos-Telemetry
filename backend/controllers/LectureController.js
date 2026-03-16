@@ -2,6 +2,7 @@ import pool from '../config/dbConfig.js';
 import { getCurrentLapNumber } from '../raceStateStore.js';
 import { getIngestionEnabled } from '../dataIngestion.js';
 import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
+import { getCurrentSessionId } from '../currentSessionStore.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -102,9 +103,11 @@ export const createLecture = async (req, res) => {
     normalizedLapNumber = parsedLapNumber;
   }
 
+  const normalizedSessionId = toNull(session_id ?? getCurrentSessionId());
+
   const liveLecture = {
     id: null,
-    session_id: toNull(session_id),
+    session_id: normalizedSessionId,
     lap_number: normalizedLapNumber,
     timestamp: normalizedTimestamp,
     voltage_battery: toNull(voltage_battery),
@@ -154,7 +157,7 @@ export const createLecture = async (req, res) => {
         $19, $20, $21, $22
       ) RETURNING *`,
       [
-        toNull(session_id), normalizedLapNumber, normalizedTimestamp, toNull(voltage_battery), toNull(current), toNull(latitude), toNull(longitude),
+        normalizedSessionId, normalizedLapNumber, normalizedTimestamp, toNull(voltage_battery), toNull(current), toNull(latitude), toNull(longitude),
         toNull(acceleration_x), toNull(acceleration_y), toNull(acceleration_z),
         toNull(orientation_x), toNull(orientation_y), toNull(orientation_z),
         toNull(rpm_motor), toNull(velocity_x), toNull(velocity_y), toNull(ambient_temp), toNull(steering_direction),

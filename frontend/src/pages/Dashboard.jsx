@@ -84,6 +84,7 @@ const DashboardPage = () => {
   const [canControl, setCanControl] = useState(false);
   const [ingestionEnabled, setIngestionEnabled] = useState(true);
   const [ingestionLoading, setIngestionLoading] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
 
   const [laps, setLaps] = useState([]);
   const [lapsNumber, setLapsNumber] = useState(1);
@@ -380,7 +381,12 @@ const DashboardPage = () => {
 
     try {
       await updateIngestionStatus(false);
-      await fetch(`${API_BASE}/api/record/pause`, { method: 'POST' });
+      await fetch(`${API_BASE}/api/record/pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clearSession: true })
+      });
+      setCurrentSessionId(null);
     } catch (err) {
       console.error(err);
     }
@@ -389,6 +395,75 @@ const DashboardPage = () => {
   // Admin functions
   const handleStart = async () => {
     if (!canControl) return;
+    const { value: formValues } = await Swal.fire({
+      title: 'Create Session',
+      html:
+        `<label>Session Type</label>` +
+        `<select id="swal-session-type" class="swal2-input">
+          <option value="test">Test</option>
+          <option value="real">Real</option>
+        </select>` +
+        `<label>Session Group</label>` +
+        `<input id="swal-session-group" class="swal2-input" placeholder="e.g. 2026-03-16-track-a">` +
+        `<label>Run Number</label>` +
+        `<input id="swal-run-number" class="swal2-input" type="number" min="1" step="1" placeholder="e.g. 1">` +
+        `<label>Description</label>` +
+        `<input id="swal-session-description" class="swal2-input" placeholder="Optional notes">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      preConfirm: () => {
+        const sessionType = document.getElementById('swal-session-type').value;
+        const sessionGroupId = document.getElementById('swal-session-group').value.trim();
+        const runNumberValue = document.getElementById('swal-run-number').value.trim();
+        const description = document.getElementById('swal-session-description').value.trim();
+
+        if (runNumberValue && (!Number.isInteger(Number(runNumberValue)) || Number(runNumberValue) <= 0)) {
+          Swal.showValidationMessage('Run number must be a positive integer');
+          return false;
+        }
+
+        return {
+          session_type: sessionType,
+          session_group_id: sessionGroupId || null,
+          run_number: runNumberValue ? Number(runNumberValue) : null,
+          description: description || null
+        };
+      }
+    });
+
+    if (!formValues) return;
+
+    let createdSession;
+    try {
+      const response = await fetch(`${API_BASE}/api/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValues)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Unable to create session');
+      }
+
+      createdSession = await response.json();
+
+      const recordResponse = await fetch(`${API_BASE}/api/record/start`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: createdSession.id })
+      });
+
+      if (!recordResponse.ok) {
+        throw new Error('Unable to start recording');
+      }
+    } catch (err) {
+      console.error("Error starting session:", err);
+      Swal.fire('Error', err.message || 'Could not start the session', 'error');
+      return;
+    }
+
+    setCurrentSessionId(createdSession.id);
     const now = Date.now();
     resetConsumptionStats();
     autoResetTriggeredRef.current = false;
@@ -406,9 +481,6 @@ const DashboardPage = () => {
     setLapsNumber(1);
     setAverageLapTime(0);
     socket.emit("comando-admin", { accion: "START_RACE" });
-    try {
-      await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
-    } catch (err) { console.warn("Backend error", err); }
   };
 
   const handlePauseToggle = async () => {
@@ -428,7 +500,11 @@ const DashboardPage = () => {
       setIsRunning(true);
 
       try {
-        await fetch(`${API_BASE}/api/record/start`, { method: "POST" });
+        await fetch(`${API_BASE}/api/record/start`, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: currentSessionId })
+        });
       } catch (err) { console.warn("Backend error", err); }
       return;
     }
@@ -442,7 +518,11 @@ const DashboardPage = () => {
 
     try {
       await updateIngestionStatus(false);
-      await fetch(`${API_BASE}/api/record/pause`, { method: "POST" });
+      await fetch(`${API_BASE}/api/record/pause`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clearSession: false })
+      });
     } catch (err) { console.warn("Backend error", err); }
   };
 
