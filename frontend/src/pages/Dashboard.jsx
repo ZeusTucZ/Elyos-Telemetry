@@ -111,6 +111,7 @@ const DashboardPage = () => {
   const [rpm_motor, setRpms] = useState(0);
   const [ambient_temp, setambient_temp] = useState(0);
   const [dataHistory, setDataHistory] = useState([]);
+  const [accelPct, setAccelPct] = useState(0);
 
   // Special variables
   const [totalWh, setTotalWh] = useState(0);
@@ -155,6 +156,7 @@ const DashboardPage = () => {
     setCurrent(0);
     setVoltage(0);
     setRpms(0);
+    setAccelPct(0);
     lastProcessedLectureKeyRef.current = null;
   }, []);
 
@@ -575,6 +577,7 @@ const DashboardPage = () => {
             setVoltage(latest.voltage_battery);
             setRpms(latest.rpm_motor);
             setambient_temp(latest.ambient_temp);
+            setAccelPct(latest.accelPct);
             const nextLat = Number(latest.latitude);
             const nextLng = Number(latest.longitude);
             if (Number.isFinite(nextLat) && Number.isFinite(nextLng)) {
@@ -700,6 +703,7 @@ const DashboardPage = () => {
                       ampHours={totalAh.toFixed(2)}
                       whPerKm={whPerKm.toFixed(2)}
                       ambient_temp={ambient_temp}
+                      accelPct={accelPct}
                     />
                   </div>
                 </div>
