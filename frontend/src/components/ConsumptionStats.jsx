@@ -7,9 +7,14 @@ const VoltageCurrentChart = ({ dataHistory }) => {
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={dataHistory}>
           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-          <XAxis dataKey="timeLabel" stroke="#ccc" />
+          <XAxis
+            dataKey="timeSeconds"
+            stroke="#ccc"
+            tickFormatter={(value) => `${value}`}
+            label={{ value: "Time (s)", position: "insideBottom", offset: -5, fill: "#ccc" }}
+          />
           <YAxis stroke="#ccc" />
-          <Tooltip labelFormatter={(value) => `Time: ${value}`} />
+          <Tooltip labelFormatter={(value) => `Time: ${value}s`} />
           <Legend />
           <Line
             type="linear"

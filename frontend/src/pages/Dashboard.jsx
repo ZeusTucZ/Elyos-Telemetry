@@ -63,19 +63,12 @@ const getLectureSampleKey = (lecture) => {
   ].join("|");
 };
 
-const getLectureDisplayTime = (lecture) => {
-  const fallbackDate = new Date();
-  const parsedDate = lecture?.timestamp ? new Date(lecture.timestamp) : fallbackDate;
-  const isValidTimestamp =
-    !Number.isNaN(parsedDate.getTime()) && parsedDate.getUTCFullYear() >= 2000;
-  const displayDate = isValidTimestamp ? parsedDate : fallbackDate;
-
-  return displayDate.toLocaleTimeString([], {
-    hour12: false,
-    minute: "2-digit",
-    second: "2-digit",
-  });
-};
+const createZeroChartEntry = () => ({
+  id: "start-point",
+  timeSeconds: 0,
+  voltage: 0,
+  current: 0,
+});
 
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
@@ -401,6 +394,7 @@ const DashboardPage = () => {
     setRemainingTime(RACE_DURATION_SECONDS);
     setRaceStartTime(now);
     setLastLapStartTime(now);
+    setDataHistory([createZeroChartEntry()]);
     setLaps([]);
     setLapsNumber(1);
     setAverageLapTime(0);
@@ -629,9 +623,13 @@ const DashboardPage = () => {
             setNumberOfSatellites(latest.num_sats);
             setAirSpeed(latest.air_speed);
 
+            const elapsedHistorySeconds = raceStartTime
+              ? Math.max(0, Math.floor((Date.now() - raceStartTime) / 1000))
+              : 0;
+
             const newEntry = {
               id: lectureKey,
-              timeLabel: getLectureDisplayTime(latest),
+              timeSeconds: elapsedHistorySeconds,
               voltage: latest.voltage_battery,
               current: latest.current,
             };
@@ -643,7 +641,7 @@ const DashboardPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showDashboard, isRunning, API_BASE, gearRatio]);
+  }, [showDashboard, isRunning, API_BASE, gearRatio, raceStartTime]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;
