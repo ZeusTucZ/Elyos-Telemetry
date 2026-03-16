@@ -70,6 +70,11 @@ const createZeroChartEntry = () => ({
   current: 0,
 });
 
+const formatDuration = (totalSeconds) => {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds || 0));
+  return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
+};
+
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
   const DEFAULT_LATITUDE = 39.792149;
@@ -754,12 +759,12 @@ const DashboardPage = () => {
                     onToggleIngestion={handleToggleIngestion}
                     ingestionEnabled={ingestionEnabled}
                     ingestionLoading={ingestionLoading}
-                    running_time={`${Math.floor(runningTime / 60)}:${("0" + (runningTime % 60)).slice(-2)}`}
-                    currentLapTime={`${Math.floor(currentLapTime / 60)}:${("0" + (currentLapTime % 60)).slice(-2)}`}
+                    running_time={formatDuration(runningTime)}
+                    currentLapTime={formatDuration(currentLapTime)}
                     laps={laps}
-                    average_time={averageLapTime.toFixed(2)}
+                    average_time={formatDuration(averageLapTime)}
                     current_lap={lapsNumber}
-                    remaining_time={`${Math.floor(remaining_time / 60)}:${("0" + (remaining_time % 60)).slice(-2)}`}
+                    remaining_time={formatDuration(remaining_time)}
                     altitude={altitude}
                     num_sats={numberOfSatellites}
                     airSpeed={airSpeed}
