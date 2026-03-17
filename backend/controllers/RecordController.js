@@ -7,6 +7,7 @@ import {
     setCurrentSessionId,
     clearCurrentSessionId
 } from '../currentSessionStore.js';
+import { resetTotalConsumption } from '../totalConsumptionStore.js';
 
 let lastMessage = "";
 
@@ -23,6 +24,7 @@ export const startRecording = async (req, res) => {
         setCurrentSessionId(parsedSessionId);
     }
 
+    resetTotalConsumption();
     setIsRunning(true);
     res.json({ message: 'Recording started', session_id: getCurrentSessionId() });
 };
@@ -32,6 +34,7 @@ export const stopRecording = async (req, res) => {
     const { clearSession = false } = req.body ?? {};
 
     setIsRunning(false);
+    resetTotalConsumption();
     if (clearSession) {
         clearCurrentSessionId();
     }

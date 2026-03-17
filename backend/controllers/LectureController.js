@@ -4,6 +4,7 @@ import { getIngestionEnabled } from '../dataIngestion.js';
 import { getIsRunning } from '../isRunning.js';
 import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
+import { addConsumptionSample, getTotalConsumption } from '../totalConsumptionStore.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -83,12 +84,8 @@ export const createLecture = async (req, res) => {
     altitude_m,
     num_sats,
     air_speed,
-    accelPct,
-    totalConsumption,
-    total_consumption
+    accelPct
   } = req.body;
-
-  const normalizedTotalConsumption = toNull(totalConsumption ?? total_consumption);
 
   let normalizedTimestamp = null;
   if (timestamp !== undefined && timestamp !== null && timestamp !== '') {
@@ -109,6 +106,13 @@ export const createLecture = async (req, res) => {
   }
 
   const normalizedSessionId = toNull(session_id ?? getCurrentSessionId());
+  const normalizedTotalConsumption = getIsRunning()
+    ? addConsumptionSample({
+        voltage: voltage_battery,
+        current,
+        dtSeconds: 1
+      })
+    : getTotalConsumption();
 
   const liveLecture = {
     id: null,
@@ -134,7 +138,7 @@ export const createLecture = async (req, res) => {
     num_sats: toNull(num_sats),
     air_speed: toNull(air_speed),
     accelPct: toNull(accelPct),
-    total_consumption: normalizedTotalConsumption
+    total_consumption: toNull(normalizedTotalConsumption)
   };
 
   setLatestLecture(liveLecture);
