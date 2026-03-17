@@ -88,6 +88,7 @@ const DashboardPage = () => {
 
   const [laps, setLaps] = useState([]);
   const [lapsNumber, setLapsNumber] = useState(1);
+  const [maxLaps, setMaxLaps] = useState(5);
   const [averageLapTime, setAverageLapTime] = useState(0);
 
   const [runningTime, setRunningTime] = useState(0);
@@ -140,7 +141,8 @@ const DashboardPage = () => {
   const lastProcessedLectureKeyRef = useRef(null);
   const autoResetTriggeredRef = useRef(false);
 
-  const RACE_DURATION_SECONDS = 2100;
+  const RACE_DURATION_SECONDS = 35 * 60;
+  const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   const calculateAverageLapTime = useCallback((lapsArray = []) => {
     if (!lapsArray.length) return 0;
@@ -542,6 +544,10 @@ const DashboardPage = () => {
 
   const handleNewLap = async () => {
     if (!canControl) return;
+    if (lapsNumber >= maxLaps) {
+      Swal.fire('Max laps reached', `You selected ${maxLaps} laps as the limit for this competition.`, 'info');
+      return;
+    }
     socket.emit("comando-admin", { accion: "NEW_LAP" });
     try {
       await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
@@ -838,6 +844,10 @@ const DashboardPage = () => {
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}
+                    maxLaps={maxLaps}
+                    onMaxLapsChange={setMaxLaps}
+                    maxLapOptions={MAX_LAP_OPTIONS}
+                    canCreateNewLap={lapsNumber < maxLaps}
                     onNewConfig={handleSettingsUpdate}
                     onNewMssage={handleNewMessage}
                     onToggleIngestion={handleToggleIngestion}

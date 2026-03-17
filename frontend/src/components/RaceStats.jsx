@@ -6,6 +6,10 @@ const RaceStats = ({
     onReset,
     onSave,
     onNewLap,
+    maxLaps = 5,
+    onMaxLapsChange,
+    maxLapOptions = [5],
+    canCreateNewLap = true,
     onNewConfig,
     onNewMssage,
     onToggleIngestion,
@@ -72,6 +76,19 @@ const RaceStats = ({
             <div className="md:basis-[40%] bg-[#0A0F1C] rounded-xl m-1 p-2 min-w-0">
                 {/* Race progress */}
                 <h2 className="text-xl font-semibold text-center m-4">Race Progress</h2>
+                <div className="mb-3 flex items-center gap-2">
+                    <label htmlFor="max-laps" className="text-sm text-gray-300">Max laps</label>
+                    <select
+                        id="max-laps"
+                        value={maxLaps}
+                        onChange={(event) => onMaxLapsChange?.(Number(event.target.value))}
+                        className="bg-[#4B4E59] text-white px-3 py-1 rounded-md text-sm"
+                    >
+                        {maxLapOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </div>
                 <div>
                     {laps.map((lap, idx) => (
                         <div key={idx}>
@@ -85,7 +102,13 @@ const RaceStats = ({
                 <div className="bg-[#0A0F1C] rounded-xl p-4 flex flex-col items-center gap-3 shadow-lg m-1 min-w-0">
                     <button onClick={onStart} className="bg-[#4B4E59] text-green-400 px-4 py-2 rounded-lg w-full font-bold text-sm">Start</button>
                     <button onClick={onPauseToggle} className="bg-[#4B4E59] text-yellow-300 px-4 py-2 rounded-lg w-full text-sm">{isPaused ? 'Resume' : 'Pause'}</button>
-                    <button onClick={onNewLap} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">New Lap</button>
+                    <button
+                        onClick={onNewLap}
+                        disabled={!canCreateNewLap}
+                        className={`px-4 py-2 rounded-lg w-full text-sm ${canCreateNewLap ? 'bg-[#4B4E59] text-white' : 'bg-[#2E3138] text-gray-500 cursor-not-allowed'}`}
+                    >
+                        New Lap
+                    </button>
                     <button onClick={onReset} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Reset</button>
                     <button onClick={onSave} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Save</button>
                     <button onClick={onNewConfig} className="bg-[#4B4E59] text-white px-4 py-2 rounded-lg w-full text-sm">Config car</button>
