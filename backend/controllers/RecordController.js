@@ -1,4 +1,5 @@
 import { setIsRunning, getIsRunning } from '../isRunning.js';
+import { getCurrentLapNumber } from '../raceStateStore.js';
 import { getIngestionEnabled, setIngestionEnabled } from '../dataIngestion.js';
 import pool from '../config/dbConfig.js';
 import buildLecturesXlsxBuffer from '../excel/export.js';
@@ -44,7 +45,7 @@ export const stopRecording = async (req, res) => {
 
 // Status recording
 export const statusRecording = async (req, res) => {
-    res.json({ isRunning: getIsRunning(), session_id: getCurrentSessionId() });
+    res.json({ isRunning: getIsRunning(), session_id: getCurrentSessionId(), currentLap: getCurrentLapNumber() });
 };
 
 // Ingestion status

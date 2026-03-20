@@ -668,10 +668,6 @@ const DashboardPage = () => {
             const lectureKey = getLectureSampleKey(latest);
             const isNewLecture =
               lectureKey !== null && lectureKey !== lastProcessedLectureKeyRef.current;
-
-            if (Number.isInteger(latest.lap_number) && latest.lap_number > 0) {
-              setLapsNumber(latest.lap_number);
-            }
             setVelocity_x(latest.velocity_x);
             setVelocity_y(latest.velocity_y);
             setCurrent(latest.current);
