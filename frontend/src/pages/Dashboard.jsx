@@ -149,6 +149,15 @@ const DashboardPage = () => {
     return lapsArray.reduce((acc, lap) => acc + lap, 0) / lapsArray.length;
   }, []);
 
+  const handleMaxLapsChange = (value) => {
+    if (!canControl) return;
+    setMaxLaps(value);
+    socket.emit("comando-admin", {
+      accion: "SET_MAX_LAPS",
+      maxLaps: value
+    })
+  }
+
   const resetConsumptionStats = useCallback(() => {
     setDataHistory([]);
     setTotalAh(0);
@@ -164,9 +173,11 @@ const DashboardPage = () => {
   const syncRaceState = useCallback((state) => {
     const lapsFromState = state?.laps ?? [];
     const lapsNumberFromState = state?.lapsNumber ?? 1;
+    const maxLapsFromState = state?.maxLaps ?? 5;
 
     setLaps(lapsFromState);
     setLapsNumber(lapsNumberFromState);
+    setMaxLaps(maxLapsFromState);
     setAverageLapTime(calculateAverageLapTime(lapsFromState));
 
     if (!state?.isRunning) {
@@ -841,7 +852,7 @@ const DashboardPage = () => {
                     onSave={handleSave}
                     onNewLap={handleNewLap}
                     maxLaps={maxLaps}
-                    onMaxLapsChange={setMaxLaps}
+                    onMaxLapsChange={handleMaxLapsChange}
                     maxLapOptions={MAX_LAP_OPTIONS}
                     canCreateNewLap={lapsNumber < maxLaps}
                     onNewConfig={handleSettingsUpdate}

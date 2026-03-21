@@ -69,6 +69,7 @@ let raceState = {
   startTime: null, // Store the initial time
   laps: [], // Store the durations
   lapsNumber: 1, // Store the number of laps
+  maxLaps: 5, // Store the number of max laps
   lastLapStartTime: null // Store the time since the last lap start
 };
 
@@ -132,6 +133,8 @@ for (const { io, socketPath } of socketServers) {
         raceState.lapsNumber += 1;
         raceState.lastLapStartTime = now;
         incrementCurrentLapNumber();
+      } else if (data.accion === "SET_MAX_LAPS") {
+        raceState.maxLaps = Number(data.maxLaps) || 5;
       }
 
       emitToAllSockets("ejecutar-accion", { accion: data.accion, state: getRaceStatePayload() });
