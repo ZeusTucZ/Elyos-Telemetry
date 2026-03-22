@@ -13,7 +13,8 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app";
+const BACKEND_ORIGIN =
+  process.env.REACT_APP_BACKEND_ORIGIN || "http://localhost:8080";
 const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
 const socket = io(BACKEND_ORIGIN, {
   path: `${BACKEND_BASE_PATH}/api/socket.io`,
@@ -141,6 +142,7 @@ const DashboardPage = () => {
   const [airSpeed, setAirSpeed] = useState(0);
   const lastProcessedLectureKeyRef = useRef(null);
   const autoResetTriggeredRef = useRef(false);
+  const latencyTestCounterRef = useRef(0);
 
   const RACE_DURATION_SECONDS = 35 * 60;
   const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -149,6 +151,90 @@ const DashboardPage = () => {
     if (!lapsArray.length) return 0;
     return lapsArray.reduce((acc, lap) => acc + lap, 0) / lapsArray.length;
   }, []);
+
+  const processIncomingLecture = useCallback((latest) => {
+    if (!latest) return;
+
+    const receivedAtMs = Date.now();
+    const lectureKey = getLectureSampleKey(latest);
+    const isNewLecture =
+      lectureKey !== null && lectureKey !== lastProcessedLectureKeyRef.current;
+
+    setVelocity_x(latest.velocity_x);
+    setVelocity_y(latest.velocity_y);
+    setCurrent(latest.current);
+    setVoltage(latest.voltage_battery);
+    setRpms(latest.rpm_motor);
+    setambient_temp(latest.ambient_temp);
+    setAccelPct(latest.accelPct);
+
+    const nextLat = Number(latest.latitude);
+    const nextLng = Number(latest.longitude);
+    if (Number.isFinite(nextLat) && Number.isFinite(nextLng)) {
+      setLatitud(nextLat);
+      setLongitud(nextLng);
+    }
+
+    if (!isNewLecture) {
+      return;
+    }
+
+    lastProcessedLectureKeyRef.current = lectureKey;
+
+    const dt = 1;
+    const powerW = latest.voltage_battery * latest.current;
+    setTotalWh((prev) => prev + (powerW * dt) / 3600);
+    setTotalAh((prev) => prev + (latest.current * dt) / 3600);
+
+    const wheelCircM = Math.PI * WHEEL_DIAMETER_M;
+    const wheelRpm = latest.rpm_motor / gearRatio;
+    const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
+    setTotalKm((prev) => prev + (metersThisTick / 1000));
+
+    setRoll(latest.orientation_x);
+    setPitch(latest.orientation_y);
+    setYaw(latest.orientation_z);
+    setAccel_x(latest.acceleration_x);
+    setAccel_y(latest.acceleration_y);
+
+    setAltitude(latest.altitude_m);
+    setNumberOfSatellites(latest.num_sats);
+    setAirSpeed(latest.air_speed);
+
+    const elapsedHistorySeconds = raceStartTime
+      ? Math.max(0, Math.floor((Date.now() - raceStartTime) / 1000))
+      : 0;
+
+    const newEntry = {
+      id: lectureKey,
+      timeSeconds: elapsedHistorySeconds,
+      voltage: latest.voltage_battery,
+      current: latest.current,
+    };
+
+    setDataHistory((prev) => [...prev.slice(-19), newEntry]);
+
+    if (latest.server_received_at_ms !== undefined) {
+      requestAnimationFrame(() => {
+        latencyTestCounterRef.current += 1;
+        const renderedAtMs = Date.now();
+        const sample = {
+          testNumber: latencyTestCounterRef.current,
+          lectureId: latest.id,
+          serverReceivedAtMs: latest.server_received_at_ms,
+          clientReceivedAtMs: receivedAtMs,
+          clientRenderedAtMs: renderedAtMs,
+          receiveLatencyMs: receivedAtMs - latest.server_received_at_ms,
+          renderLatencyMs: renderedAtMs - latest.server_received_at_ms
+        };
+
+        window.telemetryLatencySamples = window.telemetryLatencySamples || [];
+        window.telemetryLatencySamples.push(sample);
+
+        console.log(sample);
+      });
+    }
+  }, [WHEEL_DIAMETER_M, gearRatio, raceStartTime]);
 
   const handleMaxLapsChange = (value) => {
     if (!canControl) return;
@@ -228,6 +314,15 @@ const DashboardPage = () => {
 
     return () => socket.off("init-state");
   }, [syncRaceState]);
+
+  useEffect(() => {
+    const handleTelemetryLecture = (lecture) => {
+      processIncomingLecture(lecture);
+    };
+
+    socket.on("telemetry:new-lecture", handleTelemetryLecture);
+    return () => socket.off("telemetry:new-lecture", handleTelemetryLecture);
+  }, [processIncomingLecture]);
 
   useEffect(() => {
     // Pedir datos al cargar por primera vez
@@ -667,83 +762,6 @@ const DashboardPage = () => {
     }
     return () => clearInterval(interval);
   }, [timerActive, raceStartTime, lastLapStartTime, RACE_DURATION_SECONDS, performReset]);
-
-  useEffect(() => {
-    if (!showDashboard || !isRunning) return;
-
-    const interval = setInterval(() => {
-      fetch(`${API_BASE}/api/lectures`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            const latest = data[data.length - 1];
-            const lectureKey = getLectureSampleKey(latest);
-            const isNewLecture =
-              lectureKey !== null && lectureKey !== lastProcessedLectureKeyRef.current;
-            setVelocity_x(latest.velocity_x);
-            setVelocity_y(latest.velocity_y);
-            setCurrent(latest.current);
-            setVoltage(latest.voltage_battery);
-            setRpms(latest.rpm_motor);
-            setambient_temp(latest.ambient_temp);
-            setAccelPct(latest.accelPct);
-            const nextLat = Number(latest.latitude);
-            const nextLng = Number(latest.longitude);
-            if (Number.isFinite(nextLat) && Number.isFinite(nextLng)) {
-              setLatitud(nextLat);
-              setLongitud(nextLng);
-            }
-
-            if (!isNewLecture) {
-              return;
-            }
-
-            lastProcessedLectureKeyRef.current = lectureKey;
-
-            const dt = 1; // s
-
-            // Energy eficiency
-            const powerW = latest.voltage_battery * latest.current;
-            setTotalWh(prev => prev +  (powerW * dt) / 3600);
-            setTotalAh(prev => prev + (latest.current * dt) / 3600);
-
-            // Set distance
-            const wheelCircM = Math.PI * WHEEL_DIAMETER_M; // m/rev
-            const wheelRpm = latest.rpm_motor / gearRatio;     // rev/min
-            const metersThisTick = (wheelRpm / 60) * wheelCircM * dt;
-            setTotalKm(prev => prev + (metersThisTick / 1000));
-
-            // IMU data
-            setRoll(latest.orientation_x);
-            setPitch(latest.orientation_y);
-            setYaw(latest.orientation_z);
-            setAccel_x(latest.acceleration_x);
-            setAccel_y(latest.acceleration_y);
-
-            // Extra data
-            setAltitude(latest.altitude_m);
-            setNumberOfSatellites(latest.num_sats);
-            setAirSpeed(latest.air_speed);
-
-            const elapsedHistorySeconds = raceStartTime
-              ? Math.max(0, Math.floor((Date.now() - raceStartTime) / 1000))
-              : 0;
-
-            const newEntry = {
-              id: lectureKey,
-              timeSeconds: elapsedHistorySeconds,
-              voltage: latest.voltage_battery,
-              current: latest.current,
-            };
-
-            setDataHistory((prev) => [...prev.slice(-19), newEntry]);
-          }
-        })
-        .catch((err) => console.error("Error fetching data:", err));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [showDashboard, isRunning, API_BASE, gearRatio, raceStartTime]);
 
   const whPerKm = totalKm > 0 ? (totalWh / totalKm) : 0;
   const kmPerKWh = totalWh > 0 ? (totalKm / (totalWh / 1000)) : 0;

@@ -5,6 +5,7 @@ import { getIsRunning } from '../isRunning.js';
 import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
 import { addConsumptionSample, getTotalConsumption } from '../totalConsumptionStore.js';
+import { emitSocketEvent } from '../socketBus.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -114,6 +115,7 @@ export const createLecture = async (req, res) => {
       })
     : getTotalConsumption();
 
+  const serverReceivedAtMs = Date.now();
   const liveLecture = {
     id: null,
     session_id: normalizedSessionId,
@@ -138,18 +140,23 @@ export const createLecture = async (req, res) => {
     num_sats: toNull(num_sats),
     air_speed: toNull(air_speed),
     accelPct: toNull(accelPct),
-    total_consumption: toNull(normalizedTotalConsumption)
+    total_consumption: toNull(normalizedTotalConsumption),
+
+    server_received_at_ms: serverReceivedAtMs
   };
 
   setLatestLecture(liveLecture);
 
   if (!getIngestionEnabled() || !getIsRunning()) {
+    emitSocketEvent("telemetry:new-lecture", liveLecture);
+
     return res.status(200).json({
       message: 'Lecture accepted for live mode (not persisted)',
       persisted: false,
       lecture: liveLecture
     });
   }
+
 
   try {
     const result = await pool.query(
@@ -174,8 +181,14 @@ export const createLecture = async (req, res) => {
         toNull(altitude_m), toNull(num_sats), toNull(air_speed), toNull(accelPct), normalizedTotalConsumption
       ]
     );
-    setLatestLecture(result.rows[0]);
-    res.status(201).json(result.rows[0]);
+
+    const persistedLectures = {
+      ...result.rows[0],
+      server_received_at_ms: serverReceivedAtMs
+    };
+
+    setLatestLecture(persistedLectures);
+    res.status(201).json(persistedLectures);
     
   } catch (err) {
     console.error(err);
