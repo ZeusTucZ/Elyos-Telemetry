@@ -153,7 +153,7 @@ const DashboardPage = () => {
   }, []);
 
   const processIncomingLecture = useCallback((latest) => {
-    if (!latest) return;
+    if (!latest || !showDashboard || !isRunning) return;
 
     const receivedAtMs = Date.now();
     const lectureKey = getLectureSampleKey(latest);
@@ -234,7 +234,7 @@ const DashboardPage = () => {
         console.log(sample);
       });
     }
-  }, [WHEEL_DIAMETER_M, gearRatio, raceStartTime]);
+  }, [WHEEL_DIAMETER_M, gearRatio, raceStartTime, showDashboard, isRunning]);
 
   const handleMaxLapsChange = (value) => {
     if (!canControl) return;
