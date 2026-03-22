@@ -52,11 +52,11 @@ const CustomLegend = () => (
   </div>
 );
 
-const getAxisDomain = (values) => {
+const getAxisDomain = (values, maxLimit = 52) => {
   const numericValues = values.filter((value) => Number.isFinite(value));
 
   if (!numericValues.length) {
-    return [0, 10];
+    return [0, maxLimit];
   }
 
   const min = Math.min(...numericValues);
@@ -64,11 +64,11 @@ const getAxisDomain = (values) => {
 
   if (min === max) {
     const padding = Math.max(1, Math.abs(min) * 0.1);
-    return [Math.max(0, min - padding), max + padding];
+    return [Math.max(0, min - padding), maxLimit];
   }
 
   const padding = Math.max((max - min) * 0.12, 0.5);
-  return [Math.max(0, min - padding), max + padding];
+  return [Math.max(0, min - padding), maxLimit];
 };
 
 const VoltageCurrentChart = ({ dataHistory = [] }) => {
