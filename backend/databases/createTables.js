@@ -62,7 +62,7 @@ const createTables = async () => {
                 altitude_m NUMERIC(6, 2),
                 num_sats SMALLINT,
                 air_speed NUMERIC(6, 2),
-                accelPct DECIMAL(3, 2),
+                throttle DECIMAL(5, 2),
                 total_consumption NUMERIC(10, 2)
             );
 

@@ -85,6 +85,7 @@ export const createLecture = async (req, res) => {
     altitude_m,
     num_sats,
     air_speed,
+    throttle,
     accelPct
   } = req.body;
 
@@ -107,6 +108,7 @@ export const createLecture = async (req, res) => {
   }
 
   const normalizedSessionId = toNull(session_id ?? getCurrentSessionId());
+  const normalizedThrottle = toNull(throttle ?? accelPct);
   const normalizedTotalConsumption = getIsRunning()
     ? addConsumptionSample({
         voltage: voltage_battery,
@@ -139,7 +141,7 @@ export const createLecture = async (req, res) => {
     altitude_m: toNull(altitude_m),
     num_sats: toNull(num_sats),
     air_speed: toNull(air_speed),
-    accelPct: toNull(accelPct),
+    throttle: normalizedThrottle,
     total_consumption: toNull(normalizedTotalConsumption),
 
     server_received_at_ms: serverReceivedAtMs
@@ -165,7 +167,7 @@ export const createLecture = async (req, res) => {
         acceleration_x, acceleration_y, acceleration_z,
         orientation_x, orientation_y, orientation_z,
         rpm_motor, velocity_x, velocity_y, ambient_temp, steering_direction,
-        altitude_m, num_sats, air_speed, accelPct, total_consumption
+        altitude_m, num_sats, air_speed, throttle, total_consumption
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7,
         $8, $9, $10,
@@ -178,7 +180,7 @@ export const createLecture = async (req, res) => {
         toNull(acceleration_x), toNull(acceleration_y), toNull(acceleration_z),
         toNull(orientation_x), toNull(orientation_y), toNull(orientation_z),
         toNull(rpm_motor), toNull(velocity_x), toNull(velocity_y), toNull(ambient_temp), toNull(steering_direction),
-        toNull(altitude_m), toNull(num_sats), toNull(air_speed), toNull(accelPct), normalizedTotalConsumption
+        toNull(altitude_m), toNull(num_sats), toNull(air_speed), normalizedThrottle, normalizedTotalConsumption
       ]
     );
 

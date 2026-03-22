@@ -8,7 +8,7 @@ const clampPercentage = (value) => {
     return Math.max(0, Math.min(100, parsed));
 };
 
-const AccelPct = ({ percentage = 0 }) => {
+const Throttle = ({ percentage = 0 }) => {
     const safePercentage = clampPercentage(percentage);
     const previousPercentageRef = useRef(safePercentage);
     const [trend, setTrend] = useState("steady");
@@ -59,7 +59,7 @@ const AccelPct = ({ percentage = 0 }) => {
             <div className="mb-2 flex items-end justify-between gap-4">
                 <div>
                     <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                        Acceleration
+                        Throttle
                     </p>
                     <p className={`text-xs font-medium ${activeStyle.label}`}>
                         {activeStyle.status}
@@ -131,4 +131,4 @@ const AccelPct = ({ percentage = 0 }) => {
     );
 };
 
-export default AccelPct;
+export default Throttle;

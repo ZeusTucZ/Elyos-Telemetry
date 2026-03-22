@@ -155,7 +155,7 @@ def generate_payload():
         "altitude_m": round(altitude_m, 1),
         "num_sats": random.randint(10, 16),
         "air_speed": round(air_speed, 2),
-        "accelPct": round(simulation_state["accel_pct"], 1),
+        "throttle": round(simulation_state["accel_pct"], 1),
     }
 
 
@@ -180,7 +180,7 @@ def send_loop():
                 f"[{time.strftime('%H:%M:%S')}] "
                 f"Status: {response.status_code} | "
                 f"Speed: {math.sqrt(payload['velocity_x'] ** 2 + payload['velocity_y'] ** 2) * 3.6:.1f} km/h | "
-                f"Accel: {payload['accelPct']:.1f}% | "
+                f"Throttle: {payload['throttle']:.1f}% | "
                 f"Current: {payload['current']:.1f} A"
             )
 
