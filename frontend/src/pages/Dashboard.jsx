@@ -14,7 +14,7 @@ import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
 const BACKEND_ORIGIN =
-  process.env.REACT_APP_BACKEND_ORIGIN || "http://localhost:8080";
+  process.env.REACT_APP_BACKEND_ORIGIN || "https://elyos-telemetry-exylp.ondigitalocean.app";
 const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
 const socket = io(BACKEND_ORIGIN, {
   path: `${BACKEND_BASE_PATH}/api/socket.io`,
