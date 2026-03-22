@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 
 import NavigationBar from "../components/NavigationBar";
 import Speedometer from "../components/Speedometer";
+import AccelPct from "../components/AccelPct";
 import PerformanceTable from "../components/Performance";
 import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
@@ -765,7 +766,7 @@ const DashboardPage = () => {
             className="
               min-h-screen
               flex flex-col md:flex-row
-              bg-[#0A0F1C] text-white z-0 relative
+              bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_right,rgba(251,146,60,0.08),transparent_30%),#08111f] text-white z-0 relative
               p-[clamp(0.4rem,1vw,1rem)]
               gap-[clamp(0.4rem,1vw,0.75rem)]
             "
@@ -796,12 +797,19 @@ const DashboardPage = () => {
             {/* Contenido principal: en móvil se apila, en md se pone en fila */}
             <div className="flex-1 flex flex-col md:flex-row gap-[clamp(0.4rem,1vw,0.75rem)] min-w-0">
               {/* Panel principal */}
-              <div className="w-full max-w-full flex-[1.4] bg-[#20233d] rounded-xl flex flex-col min-w-0 overflow-hidden">
+              <div className="w-full max-w-full flex-[1.4] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
                 <div className="flex-1 m-2 flex flex-col lg:flex-row min-w-0">
-                  <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
-                    <Speedometer
-                      speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2).toFixed(2)}
-                    />
+                  <div className="flex-col content-center">
+                    <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
+                      <Speedometer
+                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2).toFixed(2)}
+                      />
+                    </div>
+                    <div className="flex justify-center">
+                      <AccelPct
+                        percentage={accelPct}
+                      />
+                    </div>
                   </div>
 
                   <div className="flex-[2] rounded-xl m-1 min-w-0">
@@ -821,10 +829,10 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="m-2 rounded-xl flex flex-col lg:flex-row min-w-0">
-                  <div className="flex-[2] bg-white rounded-xl m-1 min-w-0">
+                  <div className="flex-[2] rounded-xl m-1 min-w-0">
                     <VoltageCurrentChart dataHistory={dataHistory} />
                   </div>
-                  <div className="flex-[1] bg-white rounded-xl m-1 min-w-0">
+                  <div className="flex-[1] rounded-xl m-1 min-w-0">
                     <IMUdata
                       roll={roll}
                       pitch={pitch}
@@ -837,8 +845,8 @@ const DashboardPage = () => {
               </div>
 
               {/* Panel mapa + stats */}
-              <div className="w-full max-w-full flex-[1.6] bg-[#20233d] rounded-xl flex flex-col min-w-0 overflow-hidden">
-                <div className="flex-1 rounded-xl bg-white m-2 min-h-[220px]">
+              <div className="w-full max-w-full flex-[1.6] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 rounded-xl m-2 min-h-[220px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
                   <MapGPS latitude={latitude} longitud={longitud} />
                 </div>
 
