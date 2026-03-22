@@ -188,6 +188,7 @@ export const createLecture = async (req, res) => {
     };
 
     setLatestLecture(persistedLectures);
+    emitSocketEvent("telemetry:new-lecture", persistedLectures);
     res.status(201).json(persistedLectures);
     
   } catch (err) {
