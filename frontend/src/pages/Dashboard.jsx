@@ -13,7 +13,8 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const BACKEND_ORIGIN = "https://elyos-telemetry-exylp.ondigitalocean.app";
+const BACKEND_ORIGIN =
+  process.env.REACT_APP_BACKEND_ORIGIN || "http://localhost:8080";
 const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
 const socket = io(BACKEND_ORIGIN, {
   path: `${BACKEND_BASE_PATH}/api/socket.io`,
@@ -141,6 +142,7 @@ const DashboardPage = () => {
   const [airSpeed, setAirSpeed] = useState(0);
   const lastProcessedLectureKeyRef = useRef(null);
   const autoResetTriggeredRef = useRef(false);
+  const latencyTestCounterRef = useRef(0);
 
   const RACE_DURATION_SECONDS = 35 * 60;
   const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -677,6 +679,10 @@ const DashboardPage = () => {
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const latest = data[data.length - 1];
+
+            // Get received at to test performance
+            const receivedAtMs = Date.now();
+
             const lectureKey = getLectureSampleKey(latest);
             const isNewLecture =
               lectureKey !== null && lectureKey !== lastProcessedLectureKeyRef.current;
@@ -737,6 +743,25 @@ const DashboardPage = () => {
             };
 
             setDataHistory((prev) => [...prev.slice(-19), newEntry]);
+
+            requestAnimationFrame(() => {
+              latencyTestCounterRef.current += 1;
+              const renderedAtMs = Date.now();
+              const sample = {
+                testNumber: latencyTestCounterRef.current,
+                lectureId: latest.id,
+                serverReceivedAtMs: latest.server_received_at_ms,
+                clientReceivedAtMs: receivedAtMs,
+                clientRenderedAtMs: renderedAtMs,
+                receiveLatencyMs: receivedAtMs - latest.server_received_at_ms,
+                renderLatencyMs: renderedAtMs - latest.server_received_at_ms
+              };
+
+              window.telemetryLatencySamples = window.telemetryLatencySamples || [];
+              window.telemetryLatencySamples.push(sample);
+
+              console.log(sample)
+            })
           }
         })
         .catch((err) => console.error("Error fetching data:", err));

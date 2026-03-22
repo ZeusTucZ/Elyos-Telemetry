@@ -114,6 +114,7 @@ export const createLecture = async (req, res) => {
       })
     : getTotalConsumption();
 
+  const serverReceivedAtMs = Date.now();
   const liveLecture = {
     id: null,
     session_id: normalizedSessionId,
@@ -138,7 +139,9 @@ export const createLecture = async (req, res) => {
     num_sats: toNull(num_sats),
     air_speed: toNull(air_speed),
     accelPct: toNull(accelPct),
-    total_consumption: toNull(normalizedTotalConsumption)
+    total_consumption: toNull(normalizedTotalConsumption),
+
+    server_received_at_ms: serverReceivedAtMs
   };
 
   setLatestLecture(liveLecture);
@@ -174,8 +177,14 @@ export const createLecture = async (req, res) => {
         toNull(altitude_m), toNull(num_sats), toNull(air_speed), toNull(accelPct), normalizedTotalConsumption
       ]
     );
-    setLatestLecture(result.rows[0]);
-    res.status(201).json(result.rows[0]);
+
+    const persistedLectures = {
+      ...result.rows[0],
+      server_received_at_ms: serverReceivedAtMs
+    };
+
+    setLatestLecture(persistedLectures);
+    res.status(201).json(persistedLectures);
     
   } catch (err) {
     console.error(err);
