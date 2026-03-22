@@ -7,6 +7,7 @@ import {
   incrementCurrentLapNumber,
   resetCurrentLapNumber
 } from './raceStateStore.js';
+import { registerSocketEmitter } from './socketBus.js';
 
 import os from 'os';
 
@@ -57,6 +58,7 @@ const emitToAllSockets = (eventName, payload) => {
     io.emit(eventName, payload);
   }
 };
+registerSocketEmitter(emitToAllSockets);
 
 const getRaceStatePayload = () => ({
   ...raceState,

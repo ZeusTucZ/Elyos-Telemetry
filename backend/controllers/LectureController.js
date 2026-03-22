@@ -5,6 +5,7 @@ import { getIsRunning } from '../isRunning.js';
 import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
 import { addConsumptionSample, getTotalConsumption } from '../totalConsumptionStore.js';
+import { emitSocketEvent } from '../socketBus.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -147,12 +148,15 @@ export const createLecture = async (req, res) => {
   setLatestLecture(liveLecture);
 
   if (!getIngestionEnabled() || !getIsRunning()) {
+    emitSocketEvent("telemetry:new-lecture", liveLecture);
+
     return res.status(200).json({
       message: 'Lecture accepted for live mode (not persisted)',
       persisted: false,
       lecture: liveLecture
     });
   }
+
 
   try {
     const result = await pool.query(
