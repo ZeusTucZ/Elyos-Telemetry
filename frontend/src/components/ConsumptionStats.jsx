@@ -19,8 +19,14 @@ const formatValue = (value) => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
 
-  const voltage = payload.find((entry) => entry.dataKey === "voltage")?.value ?? 0;
-  const current = payload.find((entry) => entry.dataKey === "current")?.value ?? 0;
+  const voltage =
+    payload.find((entry) => entry.dataKey === "voltageSmoothed")?.value ??
+    payload.find((entry) => entry.dataKey === "voltage")?.value ??
+    0;
+  const current =
+    payload.find((entry) => entry.dataKey === "currentSmoothed")?.value ??
+    payload.find((entry) => entry.dataKey === "current")?.value ??
+    0;
 
   return (
     <div className="rounded-2xl border border-slate-600/70 bg-slate-950/85 px-4 py-3 shadow-[0_18px_40px_rgba(2,6,23,0.45)] backdrop-blur-md">
@@ -52,24 +58,7 @@ const CustomLegend = () => (
   </div>
 );
 
-const getAxisDomain = (values, maxLimit = 52) => {
-  const numericValues = values.filter((value) => Number.isFinite(value));
-
-  if (!numericValues.length) {
-    return [0, maxLimit];
-  }
-
-  const min = Math.min(...numericValues);
-  const max = Math.max(...numericValues);
-
-  if (min === max) {
-    const padding = Math.max(1, Math.abs(min) * 0.1);
-    return [Math.max(0, min - padding), maxLimit];
-  }
-
-  const padding = Math.max((max - min) * 0.12, 0.5);
-  return [Math.max(0, min - padding), maxLimit];
-};
+const getAxisDomain = (maxLimit = 52) => [0, maxLimit];
 
 const VoltageCurrentChart = ({ dataHistory = [] }) => {
   const latestPoint = dataHistory[dataHistory.length - 1];
@@ -109,13 +98,13 @@ const VoltageCurrentChart = ({ dataHistory = [] }) => {
   }, [chartData]);
 
   const voltageDomain = useMemo(
-    () => getAxisDomain(smoothedChartData.map((entry) => Number(entry.voltageSmoothed))),
-    [smoothedChartData]
+    () => getAxisDomain(),
+    []
   );
 
   const currentDomain = useMemo(
-    () => getAxisDomain(smoothedChartData.map((entry) => Number(entry.currentSmoothed))),
-    [smoothedChartData]
+    () => getAxisDomain(),
+    []
   );
 
   return (
