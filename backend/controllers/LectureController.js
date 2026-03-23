@@ -6,6 +6,7 @@ import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
 import { addConsumptionSample, getTotalConsumption } from '../totalConsumptionStore.js';
 import { emitSocketEvent } from '../socketBus.js';
+import { getRecordingStartTime } from '../recordingTimeStore.js';
 
 const toNull = (v) => v !== undefined ? v : null;
 
@@ -109,6 +110,10 @@ export const createLecture = async (req, res) => {
 
   const normalizedSessionId = toNull(session_id ?? getCurrentSessionId());
   const normalizedThrottle = toNull(throttle ?? accelPct);
+  const recordingStartTimeMs = getRecordingStartTime();
+  const normalizedRunningTime = recordingStartTimeMs
+    ? Math.max(0, Math.floor((Date.now() - recordingStartTimeMs) / 1000))
+    : null;
   const normalizedTotalConsumption = getIsRunning()
     ? addConsumptionSample({
         voltage: voltage_battery,
@@ -123,6 +128,7 @@ export const createLecture = async (req, res) => {
     session_id: normalizedSessionId,
     lap_number: normalizedLapNumber,
     timestamp: normalizedTimestamp,
+    running_time: normalizedRunningTime,
     voltage_battery: toNull(voltage_battery),
     current: toNull(current),
     latitude: toNull(latitude),
@@ -163,20 +169,20 @@ export const createLecture = async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO lectures (
-        session_id, lap_number, timestamp, voltage_battery, current, latitude, longitude,
+        session_id, lap_number, timestamp, running_time, voltage_battery, current, latitude, longitude,
         acceleration_x, acceleration_y, acceleration_z,
         orientation_x, orientation_y, orientation_z,
         rpm_motor, velocity_x, velocity_y, ambient_temp, steering_direction,
         altitude_m, num_sats, air_speed, throttle, total_consumption
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7,
-        $8, $9, $10,
-        $11, $12, $13,
-        $14, $15, $16, $17, $18,
-        $19, $20, $21, $22, $23
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11,
+        $12, $13, $14,
+        $15, $16, $17, $18, $19,
+        $20, $21, $22, $23, $24
       ) RETURNING *`,
       [
-        normalizedSessionId, normalizedLapNumber, normalizedTimestamp, toNull(voltage_battery), toNull(current), toNull(latitude), toNull(longitude),
+        normalizedSessionId, normalizedLapNumber, normalizedTimestamp, normalizedRunningTime, toNull(voltage_battery), toNull(current), toNull(latitude), toNull(longitude),
         toNull(acceleration_x), toNull(acceleration_y), toNull(acceleration_z),
         toNull(orientation_x), toNull(orientation_y), toNull(orientation_z),
         toNull(rpm_motor), toNull(velocity_x), toNull(velocity_y), toNull(ambient_temp), toNull(steering_direction),

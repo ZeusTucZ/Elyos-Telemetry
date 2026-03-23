@@ -9,6 +9,11 @@ import {
     clearCurrentSessionId
 } from '../currentSessionStore.js';
 import { resetTotalConsumption } from '../totalConsumptionStore.js';
+import {
+    clearRecordingStartTime,
+    getRecordingStartTime,
+    setRecordingStartTime
+} from '../recordingTimeStore.js';
 
 let lastMessage = "";
 
@@ -27,7 +32,12 @@ export const startRecording = async (req, res) => {
 
     resetTotalConsumption();
     setIsRunning(true);
-    res.json({ message: 'Recording started', session_id: getCurrentSessionId() });
+    setRecordingStartTime(Date.now());
+    res.json({
+        message: 'Recording started',
+        session_id: getCurrentSessionId(),
+        recording_start_time_ms: getRecordingStartTime()
+    });
 };
 
 // Stop recording
@@ -36,6 +46,7 @@ export const stopRecording = async (req, res) => {
 
     setIsRunning(false);
     resetTotalConsumption();
+    clearRecordingStartTime();
     if (clearSession) {
         clearCurrentSessionId();
     }
@@ -45,7 +56,12 @@ export const stopRecording = async (req, res) => {
 
 // Status recording
 export const statusRecording = async (req, res) => {
-    res.json({ isRunning: getIsRunning(), session_id: getCurrentSessionId(), currentLap: getCurrentLapNumber() });
+    res.json({
+        isRunning: getIsRunning(),
+        session_id: getCurrentSessionId(),
+        currentLap: getCurrentLapNumber(),
+        recording_start_time_ms: getRecordingStartTime()
+    });
 };
 
 // Ingestion status

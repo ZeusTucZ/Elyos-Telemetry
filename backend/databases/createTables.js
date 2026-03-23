@@ -44,6 +44,7 @@ const createTables = async () => {
                 session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
                 lap_number INTEGER,
                 timestamp TIMESTAMPTZ,
+                running_time INTEGER,
                 voltage_battery NUMERIC(6,2),
                 current NUMERIC(6,2),
                 latitude DOUBLE PRECISION,
