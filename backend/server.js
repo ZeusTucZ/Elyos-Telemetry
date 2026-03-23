@@ -68,11 +68,13 @@ const getRaceStatePayload = () => ({
 // Global state of the race
 let raceState = {
   isRunning: false, // Start the program
+  isPaused: false,
   startTime: null, // Store the initial time
   laps: [], // Store the durations
   lapsNumber: 1, // Store the number of laps
   maxLaps: 5, // Store the number of max laps
-  lastLapStartTime: null // Store the time since the last lap start
+  lastLapStartTime: null, // Store the time since the last lap start
+  pausedAt: null
 };
 
 // vehicle params
@@ -117,15 +119,36 @@ for (const { io, socketPath } of socketServers) {
 
       if (data.accion === "START_RACE") {
         raceState.isRunning = true;
+        raceState.isPaused = false;
         raceState.startTime = now;
         raceState.lastLapStartTime = now;
+        raceState.pausedAt = null;
         raceState.laps = [];
         raceState.lapsNumber = 1;
         resetCurrentLapNumber();
+      } else if (data.accion === "PAUSE_RACE" && raceState.isRunning && !raceState.isPaused) {
+        raceState.isRunning = false;
+        raceState.isPaused = true;
+        raceState.pausedAt = now;
+      } else if (data.accion === "RESUME_RACE" && raceState.isPaused) {
+        const pauseDuration = raceState.pausedAt ? Math.max(0, now - raceState.pausedAt) : 0;
+        raceState.isRunning = true;
+        raceState.isPaused = false;
+        if (pauseDuration > 0) {
+          if (raceState.startTime) {
+            raceState.startTime += pauseDuration;
+          }
+          if (raceState.lastLapStartTime) {
+            raceState.lastLapStartTime += pauseDuration;
+          }
+        }
+        raceState.pausedAt = null;
       } else if (data.accion === "RESET_RACE") {
         raceState.isRunning = false;
+        raceState.isPaused = false;
         raceState.startTime = null;
         raceState.lastLapStartTime = null;
+        raceState.pausedAt = null;
         raceState.laps = [];
         raceState.lapsNumber = 1;
         resetCurrentLapNumber();

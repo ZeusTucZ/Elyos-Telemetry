@@ -267,7 +267,7 @@ const DashboardPage = () => {
     setMaxLaps(maxLapsFromState);
     setAverageLapTime(calculateAverageLapTime(lapsFromState));
 
-    if (!state?.isRunning) {
+    if (!state?.isRunning && !state?.isPaused) {
       setIsRunning(false);
       setIsPaused(false);
       setPausedAt(null);
@@ -279,6 +279,20 @@ const DashboardPage = () => {
       setLastLapStartTime(null);
       resetConsumptionStats();
       autoResetTriggeredRef.current = false;
+      return;
+    }
+
+    if (state?.isPaused) {
+      const clientNow = Date.now();
+      const serverPausedAt = typeof state?.pausedAt === "number" ? state.pausedAt : clientNow;
+      const serverNow = typeof state?.serverNow === "number" ? state.serverNow : clientNow;
+      const pauseOffset = Math.max(0, serverNow - serverPausedAt);
+      const normalizedPausedAt = clientNow - pauseOffset;
+
+      setIsRunning(false);
+      setIsPaused(true);
+      setPausedAt(normalizedPausedAt);
+      setTimerActive(false);
       return;
     }
 
@@ -595,18 +609,7 @@ const DashboardPage = () => {
   const handlePauseToggle = async () => {
     if (!canControl) return;
     if (isPaused) {
-      const now = Date.now();
-      const pauseDuration = pausedAt ? Math.max(0, now - pausedAt) : 0;
-
-      if (pauseDuration > 0) {
-        setRaceStartTime((prev) => (prev ? prev + pauseDuration : prev));
-        setLastLapStartTime((prev) => (prev ? prev + pauseDuration : prev));
-      }
-
-      setPausedAt(null);
-      setIsPaused(false);
-      setTimerActive(true);
-      setIsRunning(true);
+      socket.emit("comando-admin", { accion: "RESUME_RACE" });
 
       try {
         await fetch(`${API_BASE}/api/record/start`, {
@@ -619,11 +622,7 @@ const DashboardPage = () => {
     }
 
     if (!raceStartTime) return;
-
-    setPausedAt(Date.now());
-    setIsPaused(true);
-    setTimerActive(false);
-    setIsRunning(false);
+    socket.emit("comando-admin", { accion: "PAUSE_RACE" });
 
     try {
       await updateIngestionStatus(false);
