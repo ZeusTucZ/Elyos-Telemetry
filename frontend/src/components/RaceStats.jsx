@@ -6,10 +6,12 @@ const RaceStats = ({
     onReset,
     onSave,
     onNewLap,
+    onDeleteLastLap,
     maxLaps = 5,
     onMaxLapsChange,
     maxLapOptions = [5],
     canCreateNewLap = true,
+    canDeleteLastLap = false,
     onNewConfig,
     onNewMssage,
     onToggleIngestion,
@@ -108,6 +110,13 @@ const RaceStats = ({
                         className={`w-full rounded-lg px-4 py-2 text-sm ${canCreateNewLap ? 'border border-slate-600 bg-[#162133] text-white' : 'bg-[#101827] text-gray-500 cursor-not-allowed'}`}
                     >
                         New Lap
+                    </button>
+                    <button
+                        onClick={onDeleteLastLap}
+                        disabled={!canDeleteLastLap}
+                        className={`w-full rounded-lg px-4 py-2 text-sm ${canDeleteLastLap ? 'border border-rose-400/20 bg-[#162133] text-rose-200' : 'bg-[#101827] text-gray-500 cursor-not-allowed'}`}
+                    >
+                        Delete Last Lap
                     </button>
                     <button onClick={onReset} className="w-full rounded-lg border border-slate-600 bg-[#162133] px-4 py-2 text-sm text-white">Reset</button>
                     <button onClick={onSave} className="w-full rounded-lg border border-slate-600 bg-[#162133] px-4 py-2 text-sm text-white">Save</button>

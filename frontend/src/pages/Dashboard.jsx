@@ -660,6 +660,22 @@ const DashboardPage = () => {
     } catch (err) { console.error(err); }
   };
 
+  const handleDeleteLastLap = async () => {
+    if (!canControl || laps.length === 0) return;
+
+    const result = await Swal.fire({
+      title: 'Delete last lap?',
+      text: 'This will remove the most recently added lap and restore the previous lap timing.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it'
+    });
+
+    if (!result.isConfirmed) return;
+
+    socket.emit("comando-admin", { accion: "DELETE_LAST_LAP" });
+  };
+
   const handleSave = async () => {
     if (!canControl) return;
     try {
@@ -876,10 +892,12 @@ const DashboardPage = () => {
                     onReset={handleReset}
                     onSave={handleSave}
                     onNewLap={handleNewLap}
+                    onDeleteLastLap={handleDeleteLastLap}
                     maxLaps={maxLaps}
                     onMaxLapsChange={handleMaxLapsChange}
                     maxLapOptions={MAX_LAP_OPTIONS}
                     canCreateNewLap={lapsNumber < maxLaps}
+                    canDeleteLastLap={laps.length > 0}
                     onNewConfig={handleSettingsUpdate}
                     onNewMssage={handleNewMessage}
                     onToggleIngestion={handleToggleIngestion}

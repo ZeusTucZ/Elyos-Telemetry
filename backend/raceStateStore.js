@@ -10,3 +10,6 @@ export const incrementCurrentLapNumber = () => {
   currentLapNumber += 1;
 };
 
+export const decrementCurrentLapNumber = () => {
+  currentLapNumber = Math.max(1, currentLapNumber - 1);
+};

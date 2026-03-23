@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import app from './app.js';
 import pool from './config/dbConfig.js';
 import {
+  decrementCurrentLapNumber,
   incrementCurrentLapNumber,
   resetCurrentLapNumber
 } from './raceStateStore.js';
@@ -158,6 +159,11 @@ for (const { io, socketPath } of socketServers) {
         raceState.lapsNumber += 1;
         raceState.lastLapStartTime = now;
         incrementCurrentLapNumber();
+      } else if (data.accion === "DELETE_LAST_LAP" && raceState.laps.length > 0 && raceState.lastLapStartTime) {
+        const deletedLapDuration = raceState.laps.pop();
+        raceState.lapsNumber = Math.max(1, raceState.lapsNumber - 1);
+        raceState.lastLapStartTime -= deletedLapDuration * 1000;
+        decrementCurrentLapNumber();
       } else if (data.accion === "SET_MAX_LAPS") {
         raceState.maxLaps = Number(data.maxLaps) || 5;
       }
