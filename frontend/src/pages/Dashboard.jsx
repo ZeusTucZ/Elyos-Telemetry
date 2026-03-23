@@ -864,7 +864,7 @@ const DashboardPage = () => {
 
               {/* Panel mapa + stats */}
               <div className="w-full max-w-full flex-[1.6] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
-                <div className="flex-1 rounded-xl m-2 min-h-[220px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
+                <div className="h-[320px] md:flex-1 md:h-auto rounded-xl m-2 min-h-[220px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
                   <MapGPS latitude={latitude} longitud={longitud} />
                 </div>
 

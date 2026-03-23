@@ -8,7 +8,7 @@ import time
 from urllib.parse import urlparse
 
 
-BACKEND_ORIGIN = os.getenv("BACKEND_ORIGIN", "http://localhost:8080")
+BACKEND_ORIGIN = os.getenv("BACKEND_ORIGIN", "https://elyos-telemetry-exylp.ondigitalocean.app/elyos-telemetry-backend")
 BACKEND_BASE_PATH = os.getenv("BACKEND_BASE_PATH", "/elyos-telemetry-backend")
 URL = f"{BACKEND_ORIGIN}{BACKEND_BASE_PATH}/api/lectures"
 
@@ -55,7 +55,7 @@ simulation_state = {
     "heading_deg": 90.0,
     "speed_mps": 0.0,
     "prev_speed_mps": 0.0,
-    "accel_pct": 0.0,
+    "throttle": 0.0,
     "voltage_battery": 51.8,
     "ambient_temp": 23.0,
 }
@@ -70,21 +70,21 @@ def update_drive_profile():
     phase = step % 120
 
     if phase < 18:
-        target_accel_pct = 18 + phase * 3.2
+        target_throttle = 18 + phase * 3.2
     elif phase < 45:
-        target_accel_pct = 72 + 10 * math.sin((phase - 18) / 27 * math.pi)
+        target_throttle = 72 + 10 * math.sin((phase - 18) / 27 * math.pi)
     elif phase < 70:
-        target_accel_pct = 55 - (phase - 45) * 1.4
+        target_throttle = 55 - (phase - 45) * 1.4
     elif phase < 90:
-        target_accel_pct = 18 + 8 * math.sin((phase - 70) / 20 * 2 * math.pi)
+        target_throttle = 18 + 8 * math.sin((phase - 70) / 20 * 2 * math.pi)
     else:
-        target_accel_pct = max(0, 22 - (phase - 90) * 1.3)
+        target_throttle = max(0, 22 - (phase - 90) * 1.3)
 
-    accel_pct = simulation_state["accel_pct"] * 0.72 + target_accel_pct * 0.28
-    accel_pct = clamp(accel_pct + random.uniform(-1.2, 1.2), 0, 100)
+    throttle = simulation_state["throttle"] * 0.72 + target_throttle * 0.28
+    throttle = clamp(throttle + random.uniform(-1.2, 1.2), 0, 100)
 
     drag = 0.05 + simulation_state["speed_mps"] * 0.012
-    propulsion = accel_pct / 100 * 2.8
+    propulsion = throttle / 100 * 2.8
     speed_mps = clamp(simulation_state["speed_mps"] + propulsion - drag, 0, 18)
 
     longitudinal_accel = speed_mps - simulation_state["prev_speed_mps"]
@@ -103,7 +103,7 @@ def update_drive_profile():
     simulation_state["heading_deg"] = heading_deg
     simulation_state["prev_speed_mps"] = simulation_state["speed_mps"]
     simulation_state["speed_mps"] = speed_mps
-    simulation_state["accel_pct"] = accel_pct
+    simulation_state["throttle"] = throttle
     simulation_state["voltage_battery"] = clamp(
         simulation_state["voltage_battery"] - speed_mps * 0.0025 + random.uniform(-0.015, 0.01),
         47.5,
@@ -129,8 +129,8 @@ def generate_payload():
     velocity_y = speed_mps * math.sin(heading_rad)
     lateral_accel = math.sin(simulation_state["step"] / 11) * 0.85
     vertical_accel = 9.81 + math.sin(simulation_state["step"] / 8) * 0.08
-    current = clamp(simulation_state["accel_pct"] * 0.58 + speed_kmh * 0.24 + random.uniform(-1.8, 1.8), 0, 85)
-    rpm_motor = int(speed_kmh * 92 + simulation_state["accel_pct"] * 16 + random.uniform(-60, 60))
+    current = clamp(simulation_state["throttle"] * 0.58 + speed_kmh * 0.24 + random.uniform(-1.8, 1.8), 0, 85)
+    rpm_motor = int(speed_kmh * 92 + simulation_state["throttle"] * 16 + random.uniform(-60, 60))
     steering_direction = round(math.sin(simulation_state["step"] / 16) * 18, 2)
     altitude_m = 225 + math.sin(simulation_state["step"] / 40) * 4.5
     air_speed = clamp(speed_mps + random.uniform(-0.3, 0.3), 0, 22)
@@ -155,7 +155,7 @@ def generate_payload():
         "altitude_m": round(altitude_m, 1),
         "num_sats": random.randint(10, 16),
         "air_speed": round(air_speed, 2),
-        "throttle": round(simulation_state["accel_pct"], 1),
+        "throttle": round(simulation_state["throttle"], 1),
     }
 
 
