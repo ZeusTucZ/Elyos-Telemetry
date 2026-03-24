@@ -77,7 +77,10 @@ const formatDuration = (totalSeconds) => {
   return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
 };
 
-const calculateAirDensity = (altitudeMeters = 0) => {
+const calculateAirDensity = (altitudeMeters = 0, isRunning) => {
+  if (!isRunning) {
+    return 0;
+  }
   const SEA_LEVEL_DENSITY = 1.225;
   const TEMPERATURE_LAPSE_RATE = 0.0065;
   const SEA_LEVEL_TEMPERATURE = 288.15;
@@ -169,7 +172,7 @@ const DashboardPage = () => {
 
   const RACE_DURATION_SECONDS = 35 * 60;
   const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const airDensity = calculateAirDensity(altitude);
+  const airDensity = calculateAirDensity(altitude, isRunning);
 
   const calculateAverageLapTime = useCallback((lapsArray = []) => {
     if (!lapsArray.length) return 0;
