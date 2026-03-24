@@ -77,6 +77,29 @@ const formatDuration = (totalSeconds) => {
   return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
 };
 
+const calculateAirDensity = (altitudeMeters = 0) => {
+  const SEA_LEVEL_DENSITY = 1.225;
+  const TEMPERATURE_LAPSE_RATE = 0.0065;
+  const SEA_LEVEL_TEMPERATURE = 288.15;
+  const GRAVITY = 9.81;
+  const MOLAR_MASS_AIR = 0.028964;
+  const UNIVERSAL_GAS_CONSTANT = 8.314;
+
+  const safeAltitude = Math.max(0, Number(altitudeMeters) || 0);
+  const base = 1 - (TEMPERATURE_LAPSE_RATE * safeAltitude) / SEA_LEVEL_TEMPERATURE;
+
+  if (base <= 0) {
+    return 0;
+  }
+
+  const exponent =
+    (GRAVITY * MOLAR_MASS_AIR) /
+      (UNIVERSAL_GAS_CONSTANT * TEMPERATURE_LAPSE_RATE) -
+    1;
+
+  return SEA_LEVEL_DENSITY * Math.pow(base, exponent);
+};
+
 const DashboardPage = () => {
   const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
   const DEFAULT_LATITUDE = 39.792149;
@@ -146,6 +169,7 @@ const DashboardPage = () => {
 
   const RACE_DURATION_SECONDS = 35 * 60;
   const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const airDensity = calculateAirDensity(altitude);
 
   const calculateAverageLapTime = useCallback((lapsArray = []) => {
     if (!lapsArray.length) return 0;
@@ -855,8 +879,7 @@ const DashboardPage = () => {
                       distance={totalKm.toFixed(3)}
                       ampHours={totalAh.toFixed(2)}
                       whPerKm={whPerKm.toFixed(2)}
-                      ambient_temp={ambient_temp}
-                      throttle={throttle}
+                      air_density={airDensity.toFixed(2)}
                     />
                   </div>
                 </div>
@@ -912,6 +935,7 @@ const DashboardPage = () => {
                     altitude={altitude}
                     num_sats={numberOfSatellites}
                     airSpeed={airSpeed}
+                    ambient_temp={ambient_temp}
                   />
                 </div>
               </div>

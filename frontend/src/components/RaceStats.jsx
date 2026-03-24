@@ -26,7 +26,8 @@ const RaceStats = ({
     remaining_time = 0,
     altitude = 0,
     num_sats = 0,
-    airSpeed = 0
+    airSpeed = 0,
+    ambient_temp = 0
 }) => {
     return (
         <div className='text-white p-2 rounded-xl w-full mx-auto h-full flex flex-col md:flex-row'>
@@ -71,6 +72,10 @@ const RaceStats = ({
                     <tr className="border-b border-slate-700/80">
                         <td className="py-1">Air speed</td>
                         <td className="py-1">{airSpeed}</td>
+                    </tr>
+                    <tr className="border-b border-slate-700/80">
+                        <td className="py-1">Ambient temperature</td>
+                        <td className="py-1">{ambient_temp}</td>
                     </tr>
                     </tbody>
                 </table>

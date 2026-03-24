@@ -1,6 +1,6 @@
 
 
-const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption = 0, efficiency = 0, distance = 0, ampHours = 0, whPerKm = 0, ambient_temp = 0, throttle = 0}) => {
+const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption = 0, efficiency = 0, distance = 0, ampHours = 0, whPerKm = 0, air_density = 0}) => {
     return (
         <div className="h-full w-full rounded-xl border border-slate-700/60 bg-[#0D1526] p-4 text-white shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
             <div className="mb-4">
@@ -48,12 +48,8 @@ const PerformanceTable = ({ current = 0, voltage = 0, rpms = 0, totalConsumption
                     <td className="py-1">{whPerKm} km</td>
                 </tr>
                 <tr className="border-b border-slate-700/80">
-                    <td className="py-1">Ambient Temp</td>
-                    <td className="py-1">{ambient_temp} °</td>
-                </tr>
-                <tr>
-                    <td className="py-1">Throttle</td>
-                    <td className="py-1">{throttle}%</td>
+                    <td className="py-1">Air density</td>
+                    <td className="py-1">{air_density} kg/m3</td>
                 </tr>
                 </tbody>
             </table>
