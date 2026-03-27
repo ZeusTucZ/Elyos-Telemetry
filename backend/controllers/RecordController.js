@@ -16,6 +16,7 @@ import {
 } from '../recordingTimeStore.js';
 
 let lastMessage = "";
+let lastWeather = null;
 
 // Start recording
 export const startRecording = async (req, res) => {
@@ -130,5 +131,45 @@ export const saveRecording = async (req, res, next) => {
         res.send(buffer);
     } catch (err) {
         next(err);
+    }
+};
+
+export const postWeather = async (req, res) => {
+    try {
+        // El destructuring busca req.body.weather
+        const { weather } = req.body;
+
+        if (!weather) {
+            return res.status(400).json({
+                status: 'error',
+                msg: 'No weather data provided in request body'
+            });
+        }
+
+        console.log("Weather received and stored successfully");
+        lastWeather = weather;
+
+        res.status(200).json({ 
+            status: 'success', 
+            msg: 'Clima registrado correctamente',
+            data: lastWeather 
+        });
+    } catch (error) {
+        console.error("Error in postWeather:", error);
+        res.status(500).json({ status: 'error', msg: error.message });
+    }
+};
+
+export const getWeather = async (req, res) => {
+    try {
+        if (!lastWeather) {
+            return res.status(404).json({
+                status: 'error',
+                msg: 'There is no weather data'
+            });
+        }
+        res.status(200).json({ status: 'success', data: lastWeather });
+    } catch (error) {
+        res.status(500).json({ status: 'error', msg: error.message });
     }
 };

@@ -3,7 +3,7 @@ import { fetchWeatherApi } from "openmeteo";
 const params = {
 	latitude: 20.737958,
 	longitude: -103.4569,
-	hourly: ["temperature_2m", "precipitation_probability", "weather_code"],
+	hourly: ["temperature_2m", "relative_humidity_2m", "precipitation_probability", "visibility", "weather_code"],
 	current: ["temperature_2m", "relative_humidity_2m", "weather_code"],
 	timezone: "auto",
 	forecast_days: 1,
@@ -46,8 +46,10 @@ const weatherData = {
 			(_ , i) => new Date((Number(hourly.time()) + i * hourly.interval() + utcOffsetSeconds) * 1000)
 		),
 		temperature_2m: hourly.variables(0).valuesArray(),
-		precipitation_probability: hourly.variables(1).valuesArray(),
-		weather_code: hourly.variables(2).valuesArray(),
+		relative_humidity_2m: hourly.variables(1).valuesArray(),
+		precipitation_probability: hourly.variables(2).valuesArray(),
+		visibility: hourly.variables(3).valuesArray(),
+		weather_code: hourly.variables(4).valuesArray(),
 	},
 };
 
@@ -59,3 +61,46 @@ console.log(
 	`\nCurrent weather_code: ${weatherData.current.weather_code}`,
 );
 console.log("\nHourly data:\n", weatherData.hourly)
+
+const formattedData = {
+    metadata: {
+        latitude,
+        longitude,
+        elevation,
+        timezone,
+        timezoneAbbreviation
+    },
+    current: weatherData.current,
+    // Combinamos los arrays de hourly en un solo array de objetos
+    hourly: weatherData.hourly.time.map((t, i) => ({
+        time: t,
+        temperature_2m: weatherData.hourly.temperature_2m[i],
+        relative_humidity_2m: weatherData.hourly.relative_humidity_2m[i],
+        precipitation_probability: weatherData.hourly.precipitation_probability[i],
+        visibility: weatherData.hourly.visibility[i],
+        weather_code: weatherData.hourly.weather_code[i]
+    }))
+};
+
+async function sendWeatherToBackend(dataToSend) {
+    try {
+        const res = await fetch('http://localhost:8080/api/record/weather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weather: dataToSend }), 
+        });
+
+        if (!res.ok) {
+            const errBody = await res.json();
+            throw new Error(`Error ${res.status}: ${errBody.msg || 'Error desconocido'}`);
+        }
+
+        const result = await res.json();
+        console.log('Success! Weather stored in backend:', result.status);
+    } catch (error) {
+        console.error('Error sending weather to backend:', error.message);
+    }
+}
+
+// Ejecutamos el envío
+await sendWeatherToBackend(formattedData);

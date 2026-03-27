@@ -8,7 +8,9 @@ import {
     createNewLap,
     saveRecording,
     sendMessage,
-    getMessage
+    getMessage,
+    postWeather,
+    getWeather
 } from '../controllers/RecordController.js';
 
 const router = Router();
@@ -37,5 +39,9 @@ router.get('/message', getMessage);
 
 // Save recording
 router.get('/save', saveRecording);
+
+// Post weather
+router.post('/weather', postWeather);
+router.get('/weather', getWeather);
 
 export default router;
