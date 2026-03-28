@@ -13,11 +13,15 @@ import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
 import Battery from "../components/Battery";
 
-const BACKEND_ORIGIN =
-  process.env.REACT_APP_BACKEND_ORIGIN || "https://elyos-telemetry-exylp.ondigitalocean.app";
-const BACKEND_BASE_PATH = "/elyos-telemetry-backend";
+const BACKEND_ORIGIN = (
+  process.env.REACT_APP_BACKEND_ORIGIN || "https://elyos-telemetry-exylp.ondigitalocean.app"
+).replace(/\/+$/, "");
+const BACKEND_BASE_PATH = (
+  process.env.REACT_APP_BACKEND_BASE_PATH || "/elyos-telemetry-backend"
+).replace(/\/+$/, "");
+const API_PREFIX = `${BACKEND_BASE_PATH}/api`;
 const socket = io(BACKEND_ORIGIN, {
-  path: `${BACKEND_BASE_PATH}/api/socket.io`,
+  path: `${API_PREFIX}/socket.io`,
   transports: ["websocket", "polling"],
 });
 
@@ -25,7 +29,7 @@ socket.on("connect", () => {
   console.log("[socket] connected", {
     id: socket.id,
     transport: socket.io.engine.transport.name,
-    path: `${BACKEND_BASE_PATH}/api/socket.io`
+    path: `${API_PREFIX}/socket.io`
   });
 });
 
@@ -104,7 +108,7 @@ const calculateAirDensity = (altitudeMeters = 0, isRunning) => {
 };
 
 const DashboardPage = () => {
-  const API_BASE = `${BACKEND_ORIGIN}${BACKEND_BASE_PATH}`;
+  const API_BASE = `${BACKEND_ORIGIN}${API_PREFIX}`;
   const DEFAULT_LATITUDE = 39.792149;
   const DEFAULT_LONGITUDE = -86.238707;
 
@@ -166,6 +170,8 @@ const DashboardPage = () => {
   const [altitude, setAltitude] = useState(0);
   const [numberOfSatellites, setNumberOfSatellites] = useState(0);
   const [airSpeed, setAirSpeed] = useState(0);
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const lastProcessedLectureKeyRef = useRef(null);
   const autoResetTriggeredRef = useRef(false);
   const latencyTestCounterRef = useRef(0);
@@ -367,7 +373,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     // Pedir datos al cargar por primera vez
-    fetch(`${API_BASE}/api/vehicle-params`)
+    fetch(`${API_BASE}/vehicle-params`)
       .then(res => res.json())
       .then(data => {
         setGearRatio(data.gearRatio);
@@ -410,7 +416,7 @@ const DashboardPage = () => {
 
     if (formValues) {
       // Mandamos los datos al servidor vía POST
-      await fetch(`${API_BASE}/api/vehicle-params`, {
+      await fetch(`${API_BASE}/vehicle-params`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formValues)
@@ -479,7 +485,7 @@ const DashboardPage = () => {
 
       try {
         // Enviamos el token al servidor para que lo valide
-        const resp = await fetch(`${API_BASE}/api/auth/check-control`, {
+        const resp = await fetch(`${API_BASE}/auth/check-control`, {
           headers: {
             'Authorization': `Bearer ${myToken}`
           }
@@ -496,7 +502,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchIngestionStatus = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/record/ingestion`);
+        const response = await fetch(`${API_BASE}/record/ingestion`);
         if (!response.ok) return;
         const data = await response.json();
         setIngestionEnabled(Boolean(data.ingestionEnabled));
@@ -508,8 +514,31 @@ const DashboardPage = () => {
     fetchIngestionStatus();
   }, [API_BASE]);
 
+  useEffect(() => {
+    const fetchStoredWeather = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/record/weather`);
+        if (!response.ok) return;
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const preview = (await response.text()).slice(0, 200);
+          console.error('GET /weather returned non-JSON:', preview);
+          return;
+        }
+
+        const data = await response.json();
+        setWeatherData(data.data ?? null);
+      } catch (err) {
+        console.error('Error reading weather data:', err);
+      }
+    };
+
+    fetchStoredWeather();
+  }, [API_BASE]);
+
   const updateIngestionStatus = useCallback(async (nextValue) => {
-    const response = await fetch(`${API_BASE}/api/record/ingestion`, {
+    const response = await fetch(`${API_BASE}/record/ingestion`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ingestionEnabled: nextValue })
@@ -531,7 +560,7 @@ const DashboardPage = () => {
 
     try {
       await updateIngestionStatus(false);
-      await fetch(`${API_BASE}/api/record/pause`, {
+      await fetch(`${API_BASE}/record/pause`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clearSession: true })
@@ -585,7 +614,7 @@ const DashboardPage = () => {
 
     let createdSession;
     try {
-      const response = await fetch(`${API_BASE}/api/sessions`, {
+      const response = await fetch(`${API_BASE}/sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formValues)
@@ -598,7 +627,7 @@ const DashboardPage = () => {
 
       createdSession = await response.json();
 
-      const recordResponse = await fetch(`${API_BASE}/api/record/start`, {
+      const recordResponse = await fetch(`${API_BASE}/record/start`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: createdSession.id })
@@ -639,7 +668,7 @@ const DashboardPage = () => {
       socket.emit("comando-admin", { accion: "RESUME_RACE" });
 
       try {
-        await fetch(`${API_BASE}/api/record/start`, {
+        await fetch(`${API_BASE}/record/start`, {
           method: "POST",
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: currentSessionId })
@@ -653,7 +682,7 @@ const DashboardPage = () => {
 
     try {
       await updateIngestionStatus(false);
-      await fetch(`${API_BASE}/api/record/pause`, {
+      await fetch(`${API_BASE}/record/pause`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clearSession: false })
@@ -683,7 +712,7 @@ const DashboardPage = () => {
     }
     socket.emit("comando-admin", { accion: "NEW_LAP" });
     try {
-      await fetch(`${API_BASE}/api/record/newLap`, { method: 'POST' });
+      await fetch(`${API_BASE}/record/newLap`, { method: 'POST' });
     } catch (err) { console.error(err); }
   };
 
@@ -706,7 +735,7 @@ const DashboardPage = () => {
   const handleSave = async () => {
     if (!canControl) return;
     try {
-      const resp = await fetch(`${API_BASE}/api/record/save`, { method: 'GET' });
+      const resp = await fetch(`${API_BASE}/record/save`, { method: 'GET' });
       if (!resp.ok) return; // maneja error
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
@@ -754,7 +783,7 @@ const DashboardPage = () => {
       const dataToSend = { message: formValues };
 
       try {
-        const response = await fetch(`${API_BASE}/api/record/message`, {
+        const response = await fetch(`${API_BASE}/record/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dataToSend),
@@ -776,6 +805,38 @@ const DashboardPage = () => {
       }
     }
   }
+
+  const handleFetchWeather = async () => {
+    if (weatherLoading) return;
+
+    setWeatherLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/record/weather/fetch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude, longitude: longitud })
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const responseBody = (await response.text()).slice(0, 300);
+        throw new Error(`Weather endpoint returned non-JSON (status ${response.status}). Body starts with: ${responseBody}`);
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.msg || 'Could not fetch weather');
+      }
+
+      setWeatherData(data.data ?? null);
+      Swal.fire('Updated', 'Current weather fetched and saved.', 'success');
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+      Swal.fire('Error', error.message || 'Could not fetch weather data', 'error');
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
 
   // Count the time
   useEffect(() => {
@@ -907,6 +968,28 @@ const DashboardPage = () => {
               <div className="w-full max-w-full flex-[1.6] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
                 <div className="h-[320px] md:flex-1 md:h-auto rounded-xl m-2 min-h-[220px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
                   <MapGPS latitude={latitude} longitud={longitud} />
+                </div>
+                <div className="rounded-xl m-2 border border-slate-700/60 bg-[#0F1A2E] p-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-sm font-semibold text-slate-100">Current Weather</h3>
+                    <button
+                      onClick={handleFetchWeather}
+                      disabled={weatherLoading}
+                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 ${weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      {weatherLoading ? 'Updating...' : 'Get Current Weather'}
+                    </button>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-200 sm:grid-cols-3">
+                    <div>Temp: {weatherData?.current ? `${weatherData.current.temperature_2m} C` : '--'}</div>
+                    <div>Humidity: {weatherData?.current ? `${weatherData.current.relative_humidity_2m}%` : '--'}</div>
+                    <div>Code: {weatherData?.current?.weather_code ?? '--'}</div>
+                    <div>Time: {weatherData?.current?.time ? new Date(weatherData.current.time).toLocaleTimeString() : '--'}</div>
+                    <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
+                    <div>
+                      Coords: {weatherData?.metadata ? `${Number(weatherData.metadata.latitude).toFixed(3)}, ${Number(weatherData.metadata.longitude).toFixed(3)}` : '--'}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex-1 rounded-xl m-2 min-w-0">

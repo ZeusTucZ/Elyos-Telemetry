@@ -14,6 +14,7 @@ import {
     getRecordingStartTime,
     setRecordingStartTime
 } from '../recordingTimeStore.js';
+import { buildCurrentWeatherPayload } from '../services/weatherService.js';
 
 let lastMessage = "";
 let lastWeather = null;
@@ -170,6 +171,29 @@ export const getWeather = async (req, res) => {
         }
         res.status(200).json({ status: 'success', data: lastWeather });
     } catch (error) {
+        res.status(500).json({ status: 'error', msg: error.message });
+    }
+};
+
+export const fetchAndStoreCurrentWeather = async (req, res) => {
+    try {
+        const latitude = Number(req.body?.latitude);
+        const longitude = Number(req.body?.longitude);
+
+        const weather = await buildCurrentWeatherPayload({
+            latitude: Number.isFinite(latitude) ? latitude : undefined,
+            longitude: Number.isFinite(longitude) ? longitude : undefined
+        });
+
+        lastWeather = weather;
+
+        res.status(200).json({
+            status: 'success',
+            msg: 'Current weather fetched and stored',
+            data: lastWeather
+        });
+    } catch (error) {
+        console.error('Error in fetchAndStoreCurrentWeather:', error);
         res.status(500).json({ status: 'error', msg: error.message });
     }
 };

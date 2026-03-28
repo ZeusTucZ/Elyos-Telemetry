@@ -10,7 +10,8 @@ import {
     sendMessage,
     getMessage,
     postWeather,
-    getWeather
+    getWeather,
+    fetchAndStoreCurrentWeather
 } from '../controllers/RecordController.js';
 
 const router = Router();
@@ -43,5 +44,7 @@ router.get('/save', saveRecording);
 // Post weather
 router.post('/weather', postWeather);
 router.get('/weather', getWeather);
+router.post('/weather/fetch', fetchAndStoreCurrentWeather);
+router.post('/weather/current', fetchAndStoreCurrentWeather);
 
 export default router;
