@@ -164,7 +164,6 @@ const DashboardPage = () => {
   const [remaining_time, setRemainingTime] = useState(2100)
   const [raceStartTime, setRaceStartTime] = useState(null);
   const [lastLapStartTime, setLastLapStartTime] = useState(null);
-  const [pausedAt, setPausedAt] = useState(null);
 
   const showDashboard = true;
   const [isRunning, setIsRunning] = useState(false);
@@ -337,7 +336,6 @@ const DashboardPage = () => {
     if (!state?.isRunning && !state?.isPaused) {
       setIsRunning(false);
       setIsPaused(false);
-      setPausedAt(null);
       setTimerActive(false);
       setRunningTime(0);
       setCurrentLapTime(0);
@@ -350,15 +348,8 @@ const DashboardPage = () => {
     }
 
     if (state?.isPaused) {
-      const clientNow = Date.now();
-      const serverPausedAt = typeof state?.pausedAt === "number" ? state.pausedAt : clientNow;
-      const serverNow = typeof state?.serverNow === "number" ? state.serverNow : clientNow;
-      const pauseOffset = Math.max(0, serverNow - serverPausedAt);
-      const normalizedPausedAt = clientNow - pauseOffset;
-
       setIsRunning(false);
       setIsPaused(true);
-      setPausedAt(normalizedPausedAt);
       setTimerActive(false);
       return;
     }
@@ -376,7 +367,6 @@ const DashboardPage = () => {
 
     setIsRunning(true);
     setIsPaused(false);
-    setPausedAt(null);
     setTimerActive(true);
     setRaceStartTime(normalizedRaceStart);
     setLastLapStartTime(normalizedLapStart);
@@ -487,7 +477,6 @@ const DashboardPage = () => {
     setNumberOfSatellites(0);
     setAirSpeed(0);
     setIsPaused(false);
-    setPausedAt(null);
     autoResetTriggeredRef.current = false;
   }, [DEFAULT_LATITUDE, DEFAULT_LONGITUDE, RACE_DURATION_SECONDS, resetConsumptionStats]);
 
@@ -681,7 +670,6 @@ const DashboardPage = () => {
     resetConsumptionStats();
     autoResetTriggeredRef.current = false;
     setIsPaused(false);
-    setPausedAt(null);
     setIsRunning(true);
     setTimerActive(true);
     setRunningTime(0);
@@ -841,7 +829,7 @@ const DashboardPage = () => {
   }
 
   const handleFetchWeather = async () => {
-    if (weatherLoading) return;
+    if (!canControl || weatherLoading) return;
 
     setWeatherLoading(true);
     try {
@@ -1008,8 +996,8 @@ const DashboardPage = () => {
                     <h3 className="text-sm font-semibold text-slate-100">Current Weather</h3>
                     <button
                       onClick={handleFetchWeather}
-                      disabled={weatherLoading}
-                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 ${weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      disabled={!canControl || weatherLoading}
+                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 ${!canControl || weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       {weatherLoading ? 'Updating...' : 'Get Current Weather'}
                     </button>
