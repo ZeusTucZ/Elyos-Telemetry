@@ -1,8 +1,18 @@
 import { fetchWeatherApi } from "openmeteo";
 
+const roundToMaxTwoDecimals = (value) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return value;
+  }
+
+  return Number(numericValue.toFixed(2));
+};
+
 const DEFAULT_PARAMS = {
-  latitude: 20.737958,
-  longitude: -103.4569,
+  latitude: 39.79215,
+  longitude: -86.23871,
   current: ["temperature_2m", "relative_humidity_2m", "weather_code"],
   timezone: "auto",
   forecast_days: 1,
@@ -21,22 +31,21 @@ export const buildCurrentWeatherPayload = async ({
   });
 
   const response = responses[0];
-  const utcOffsetSeconds = response.utcOffsetSeconds();
   const current = response.current();
 
   return {
     metadata: {
-      latitude: response.latitude(),
-      longitude: response.longitude(),
-      elevation: response.elevation(),
+      latitude: roundToMaxTwoDecimals(response.latitude()),
+      longitude: roundToMaxTwoDecimals(response.longitude()),
+      elevation: roundToMaxTwoDecimals(response.elevation()),
       timezone: response.timezone(),
       timezoneAbbreviation: response.timezoneAbbreviation(),
     },
     current: {
-      time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
-      temperature_2m: current.variables(0).value(),
-      relative_humidity_2m: current.variables(1).value(),
-      weather_code: current.variables(2).value(),
+      time: new Date(Number(current.time()) * 1000).toISOString(),
+      temperature_2m: roundToMaxTwoDecimals(current.variables(0).value()),
+      relative_humidity_2m: roundToMaxTwoDecimals(current.variables(1).value()),
+      weather_code: roundToMaxTwoDecimals(current.variables(2).value()),
     },
   };
 };

@@ -81,6 +81,35 @@ const formatDuration = (totalSeconds) => {
   return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
 };
 
+const formatTimeInTimezone = (isoTime, timezone) => {
+  if (!isoTime) return "--";
+
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      timeZone: timezone || "America/Indiana/Indianapolis",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(new Date(isoTime));
+  } catch (error) {
+    console.error("Error formatting weather time:", error);
+    return new Date(isoTime).toLocaleTimeString();
+  }
+};
+
+const formatNumber = (value) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "--";
+  }
+
+  return numericValue.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  });
+};
+
 const calculateAirDensity = (altitudeMeters = 0, isRunning) => {
   if (!isRunning) {
     return 0;
@@ -981,13 +1010,13 @@ const DashboardPage = () => {
                     </button>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-200 sm:grid-cols-3">
-                    <div>Temp: {weatherData?.current ? `${weatherData.current.temperature_2m} C` : '--'}</div>
-                    <div>Humidity: {weatherData?.current ? `${weatherData.current.relative_humidity_2m}%` : '--'}</div>
-                    <div>Code: {weatherData?.current?.weather_code ?? '--'}</div>
-                    <div>Time: {weatherData?.current?.time ? new Date(weatherData.current.time).toLocaleTimeString() : '--'}</div>
+                    <div>Temp: {weatherData?.current ? `${formatNumber(weatherData.current.temperature_2m)} C` : '--'}</div>
+                    <div>Humidity: {weatherData?.current ? `${formatNumber(weatherData.current.relative_humidity_2m)}%` : '--'}</div>
+                    <div>Code: {weatherData?.current ? formatNumber(weatherData.current.weather_code) : '--'}</div>
+                    <div>Time: {weatherData?.current?.time ? formatTimeInTimezone(weatherData.current.time, weatherData?.metadata?.timezone) : '--'}</div>
                     <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
                     <div>
-                      Coords: {weatherData?.metadata ? `${Number(weatherData.metadata.latitude).toFixed(3)}, ${Number(weatherData.metadata.longitude).toFixed(3)}` : '--'}
+                      Coords: {weatherData?.metadata ? `${formatNumber(weatherData.metadata.latitude)}, ${formatNumber(weatherData.metadata.longitude)}` : '--'}
                     </div>
                   </div>
                 </div>
