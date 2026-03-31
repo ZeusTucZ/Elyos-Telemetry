@@ -1006,7 +1006,7 @@ const DashboardPage = () => {
                     <div>Temp: {weatherData?.current ? formatValueWithUnit(weatherData.current.temperature_2m, ' C') : '--'}</div>
                     <div>Humidity: {weatherData?.current ? formatValueWithUnit(weatherData.current.relative_humidity_2m, '%') : '--'}</div>
                     <div>Precip. Prob. (next 2h): {weatherData?.current ? formatValueWithUnit(weatherData.current.precipitation_probability, '%') : '--'}</div>
-                    <div>Code: {weatherData?.current ? formatNumber(weatherData.current.weather_code) : '--'}</div>
+                    <div>Weather: {weatherData?.current?.weather_code_description ?? '--'}</div>
                     <div>Visibility: {weatherData?.current ? formatValueWithUnit(weatherData.current.visibility, ' m') : '--'}</div>
                     <div>Time: {weatherData?.current?.time ? formatTimeInTimezone(weatherData.current.time, weatherData?.metadata?.timezone) : '--'}</div>
                     <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>

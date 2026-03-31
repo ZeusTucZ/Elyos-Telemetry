@@ -10,6 +10,33 @@ const roundToMaxTwoDecimals = (value) => {
   return Number(numericValue.toFixed(2));
 };
 
+const getWeatherCodeDescription = (weatherCode) => {
+  const numericCode = Number(weatherCode);
+
+  if (!Number.isFinite(numericCode)) {
+    return "Unknown";
+  }
+
+  if (numericCode === 0) return "Clear";
+  if (numericCode >= 1 && numericCode <= 2) return "Partly Cloudy";
+  if (numericCode === 3) return "Overcast";
+  if (numericCode >= 4 && numericCode <= 12) return "Reduced Visibility";
+  if (numericCode >= 13 && numericCode <= 16) return "Overcast";
+  if (numericCode >= 17 && numericCode <= 19) return "Thunderstorm";
+  if (numericCode >= 20 && numericCode <= 29) return "Overcast";
+  if (numericCode >= 30 && numericCode <= 49) return "Reduced Visibility";
+  if (numericCode >= 50 && numericCode <= 59) return "Drizzle";
+  if (numericCode >= 60 && numericCode <= 69) return "Rain";
+  if (numericCode >= 70 && numericCode <= 79) return "Snow";
+  if (numericCode >= 80 && numericCode <= 84) return "Rain Showers";
+  if (numericCode >= 85 && numericCode <= 90) return "Snow";
+  if (numericCode >= 91 && numericCode <= 92) return "Rain";
+  if (numericCode >= 93 && numericCode <= 94) return "Snow";
+  if (numericCode >= 95 && numericCode <= 99) return "Thunderstorm";
+
+  return "Unknown";
+};
+
 const range = (start, stop, step) =>
   Array.from({ length: Math.max(0, (stop - start) / step) }, (_, index) => start + index * step);
 
@@ -97,6 +124,7 @@ export const buildCurrentWeatherPayload = async ({
       temperature_2m: roundToMaxTwoDecimals(current.variables(0).value()),
       relative_humidity_2m: roundToMaxTwoDecimals(current.variables(1).value()),
       weather_code: roundToMaxTwoDecimals(current.variables(2).value()),
+      weather_code_description: getWeatherCodeDescription(current.variables(2).value()),
       precipitation_probability: precipitationProbabilityEntry
         ? roundToMaxTwoDecimals(precipitationProbabilityEntry.value)
         : null,
