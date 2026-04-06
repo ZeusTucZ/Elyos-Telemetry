@@ -945,7 +945,7 @@ const DashboardPage = () => {
                   <div className="flex-col content-center">
                     <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
                       <Speedometer
-                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2).toFixed(2)}
+                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2) * 3.6}
                       />
                     </div>
                     <div className="flex justify-center">
@@ -1044,7 +1044,7 @@ const DashboardPage = () => {
                     remaining_time={formatDuration(remaining_time)}
                     altitude={altitude}
                     num_sats={numberOfSatellites}
-                    airSpeed={airSpeed}
+                    airSpeed={(Number(airSpeed) || 0) * 3.6}
                     ambient_temp={ambient_temp}
                   />
                 </div>

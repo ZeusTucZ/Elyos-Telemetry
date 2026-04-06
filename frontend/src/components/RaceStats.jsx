@@ -71,7 +71,7 @@ const RaceStats = ({
                     </tr>
                     <tr className="border-b border-slate-700/80">
                         <td className="py-1">Air speed</td>
-                        <td className="py-1">{airSpeed}</td>
+                        <td className="py-1">{Number(airSpeed).toFixed(1)} km/h</td>
                     </tr>
                     <tr className="border-b border-slate-700/80">
                         <td className="py-1">Ambient temperature</td>
