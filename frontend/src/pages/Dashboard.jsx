@@ -81,23 +81,6 @@ const formatDuration = (totalSeconds) => {
   return `${Math.floor(safeSeconds / 60)}:${("0" + (safeSeconds % 60)).slice(-2)}`;
 };
 
-const formatTimeInTimezone = (isoTime, timezone) => {
-  if (!isoTime) return "--";
-
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      timeZone: timezone || "America/Indiana/Indianapolis",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).format(new Date(isoTime));
-  } catch (error) {
-    console.error("Error formatting weather time:", error);
-    return new Date(isoTime).toLocaleTimeString();
-  }
-};
-
 const formatNumber = (value) => {
   const numericValue = Number(value);
 
@@ -945,7 +928,7 @@ const DashboardPage = () => {
                   <div className="flex-col content-center">
                     <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
                       <Speedometer
-                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2) * 3.6}
+                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2)}
                       />
                     </div>
                     <div className="flex justify-center">
@@ -987,32 +970,27 @@ const DashboardPage = () => {
               </div>
 
               {/* Panel mapa + stats */}
-              <div className="w-full max-w-full flex-[1.6] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
-                <div className="h-[320px] md:flex-1 md:h-auto rounded-xl m-2 min-h-[220px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
+              <div className="w-full max-w-full flex-[1.8] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
+                <div className="h-[400px] md:flex-[1.25] md:h-auto rounded-xl m-2 min-h-[260px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
                   <MapGPS latitude={latitude} longitud={longitud} />
                 </div>
-                <div className="rounded-xl m-2 border border-slate-700/60 bg-[#0F1A2E] p-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="text-sm font-semibold text-slate-100">Current Weather</h3>
+                <div className="rounded-xl m-2 border border-slate-700/60 bg-[#0F1A2E] px-3 py-2.5">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-200 sm:grid-cols-3 lg:flex-1">
+                      <div>Temp: {weatherData?.current ? formatValueWithUnit(weatherData.current.temperature_2m, ' C') : '--'}</div>
+                      <div>Humidity: {weatherData?.current ? formatValueWithUnit(weatherData.current.relative_humidity_2m, '%') : '--'}</div>
+                      <div>Precip. Prob. (next 2h): {weatherData?.current ? formatValueWithUnit(weatherData.current.precipitation_probability, '%') : '--'}</div>
+                      <div>Weather: {weatherData?.current?.weather_code_description ?? '--'}</div>
+                      <div>Visibility: {weatherData?.current ? formatValueWithUnit(weatherData.current.visibility, ' m') : '--'}</div>
+                      <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
+                    </div>
                     <button
                       onClick={handleFetchWeather}
                       disabled={!canControl || weatherLoading}
-                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 ${!canControl || weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 lg:self-end ${!canControl || weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       {weatherLoading ? 'Updating...' : 'Get Current Weather'}
                     </button>
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-200 sm:grid-cols-3">
-                    <div>Temp: {weatherData?.current ? formatValueWithUnit(weatherData.current.temperature_2m, ' C') : '--'}</div>
-                    <div>Humidity: {weatherData?.current ? formatValueWithUnit(weatherData.current.relative_humidity_2m, '%') : '--'}</div>
-                    <div>Precip. Prob. (next 2h): {weatherData?.current ? formatValueWithUnit(weatherData.current.precipitation_probability, '%') : '--'}</div>
-                    <div>Weather: {weatherData?.current?.weather_code_description ?? '--'}</div>
-                    <div>Visibility: {weatherData?.current ? formatValueWithUnit(weatherData.current.visibility, ' m') : '--'}</div>
-                    <div>Time: {weatherData?.current?.time ? formatTimeInTimezone(weatherData.current.time, weatherData?.metadata?.timezone) : '--'}</div>
-                    <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
-                    <div>
-                      Coords: {weatherData?.metadata ? `${formatNumber(weatherData.metadata.latitude)}, ${formatNumber(weatherData.metadata.longitude)}` : '--'}
-                    </div>
                   </div>
                 </div>
 
@@ -1044,7 +1022,7 @@ const DashboardPage = () => {
                     remaining_time={formatDuration(remaining_time)}
                     altitude={altitude}
                     num_sats={numberOfSatellites}
-                    airSpeed={(Number(airSpeed) || 0) * 3.6}
+                    airSpeed={Number(airSpeed) || 0}
                     ambient_temp={ambient_temp}
                   />
                 </div>
