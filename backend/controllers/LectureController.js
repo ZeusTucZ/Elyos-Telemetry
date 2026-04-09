@@ -2,7 +2,7 @@ import pool from '../config/dbConfig.js';
 import { getCurrentLapNumber } from '../raceStateStore.js';
 import { getIngestionEnabled } from '../dataIngestion.js';
 import { getIsRunning } from '../isRunning.js';
-import { getLatestLecture, setLatestLecture } from '../liveTelemetryStore.js';
+import { getLatestLecture, getLectureBuffer, setLatestLecture } from '../liveTelemetryStore.js';
 import { getCurrentSessionId } from '../currentSessionStore.js';
 import { addConsumptionSample, getTotalConsumption } from '../totalConsumptionStore.js';
 import { emitSocketEvent } from '../socketBus.js';
@@ -50,6 +50,11 @@ export const getBySessionId = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Error retrieving lectures by session' });
   }
+};
+
+export const getLiveBuffer = async (req, res) => {
+  const limit = Number(req.query.limit) || undefined;
+  res.json(getLectureBuffer(limit));
 };
 
 export const getLectureById = async (req, res) => {

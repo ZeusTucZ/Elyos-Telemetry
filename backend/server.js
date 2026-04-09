@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import app from './app.js';
 import pool from './config/dbConfig.js';
+import { clearLectureBuffer } from './liveTelemetryStore.js';
 import {
   decrementCurrentLapNumber,
   incrementCurrentLapNumber,
@@ -119,6 +120,7 @@ for (const { io, socketPath } of socketServers) {
       const now = Date.now();
 
       if (data.accion === "START_RACE") {
+        clearLectureBuffer();
         raceState.isRunning = true;
         raceState.isPaused = false;
         raceState.startTime = now;
@@ -145,6 +147,7 @@ for (const { io, socketPath } of socketServers) {
         }
         raceState.pausedAt = null;
       } else if (data.accion === "RESET_RACE") {
+        clearLectureBuffer();
         raceState.isRunning = false;
         raceState.isPaused = false;
         raceState.startTime = null;

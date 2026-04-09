@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAllLectures,
   getBySessionId,
+  getLiveBuffer,
   getLectureById,
   createLecture
 } from '../controllers/LectureController.js';
@@ -13,6 +14,9 @@ router.get('/', getAllLectures);
 
 // Get lecture by session
 router.get('/session/:sessionId', getBySessionId);
+
+// Get live lecture buffer kept in memory
+router.get('/live-buffer', getLiveBuffer);
 
 // Get lecture by ID
 router.get('/:id', getLectureById);
