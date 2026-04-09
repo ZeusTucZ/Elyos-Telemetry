@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { io } from "socket.io-client";
 import Swal from 'sweetalert2';
@@ -11,7 +11,16 @@ import IMUdata from "../components/IMUdata";
 import VoltageCurrentChart from "../components/ConsumptionStats";
 import MapGPS from "../components/MapGPS";
 import RaceStats from "../components/RaceStats";
+import RaceStrategyPanel from "../components/RaceStrategyPanel";
 import Battery from "../components/Battery";
+import {
+  STRATEGY_DEFAULTS,
+  buildRaceStrategy,
+  buildTelemetryHistory,
+  getLectureSampleKey,
+  mergeLectureCollections,
+  mergeLectureIntoBuffer,
+} from "../components/raceStrategy";
 
 const BACKEND_ORIGIN = (
   process.env.REACT_APP_BACKEND_ORIGIN || "https://elyos-telemetry-exylp.ondigitalocean.app"
@@ -45,29 +54,6 @@ socket.on("connect_error", (error) => {
 socket.on("disconnect", (reason) => {
   console.log("[socket] disconnected", { reason });
 });
-
-const getLectureSampleKey = (lecture) => {
-  if (!lecture) return null;
-
-  if (lecture.id !== null && lecture.id !== undefined) {
-    return `id:${lecture.id}`;
-  }
-
-  if (lecture.timestamp) {
-    return `ts:${lecture.timestamp}`;
-  }
-
-  return [
-    lecture.lap_number,
-    lecture.voltage_battery,
-    lecture.current,
-    lecture.rpm_motor,
-    lecture.velocity_x,
-    lecture.velocity_y,
-    lecture.latitude,
-    lecture.longitude
-  ].join("|");
-};
 
 const createZeroChartEntry = () => ({
   id: "start-point",
@@ -159,7 +145,15 @@ const DashboardPage = () => {
   const [rpm_motor, setRpms] = useState(0);
   const [ambient_temp, setambient_temp] = useState(0);
   const [dataHistory, setDataHistory] = useState([]);
+  const [telemetryBuffer, setTelemetryBuffer] = useState([]);
   const [throttle, setThrottle] = useState(0);
+  const [strategyConfig, setStrategyConfig] = useState({
+    trackLengthKm: STRATEGY_DEFAULTS.trackLengthKm,
+    minSpeedKph: STRATEGY_DEFAULTS.minSpeedKph,
+    maxSpeedKph: STRATEGY_DEFAULTS.maxSpeedKph,
+    candidateStepKph: STRATEGY_DEFAULTS.candidateStepKph,
+    historyLimit: STRATEGY_DEFAULTS.historyLimit,
+  });
 
   // Special variables
   const [totalWh, setTotalWh] = useState(0);
@@ -195,6 +189,25 @@ const DashboardPage = () => {
   const RACE_DURATION_SECONDS = 35 * 60;
   const MAX_LAP_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const airDensity = calculateAirDensity(altitude, isRunning);
+  const telemetryHistory = useMemo(
+    () => buildTelemetryHistory(telemetryBuffer, strategyConfig),
+    [telemetryBuffer, strategyConfig],
+  );
+  const strategyRecommendation = useMemo(
+    () =>
+      buildRaceStrategy({
+        history: telemetryHistory,
+        remainingTimeSeconds: remaining_time,
+        currentLap: lapsNumber,
+        maxLaps,
+        config: strategyConfig,
+      }),
+    [telemetryHistory, remaining_time, lapsNumber, maxLaps, strategyConfig],
+  );
+  const currentSpeedKph = useMemo(
+    () => Math.sqrt((Number(velocity_x) || 0) ** 2 + (Number(velocity_y) || 0) ** 2),
+    [velocity_x, velocity_y],
+  );
 
   const calculateAverageLapTime = useCallback((lapsArray = []) => {
     if (!lapsArray.length) return 0;
@@ -229,6 +242,9 @@ const DashboardPage = () => {
     }
 
     lastProcessedLectureKeyRef.current = lectureKey;
+    setTelemetryBuffer((prev) =>
+      mergeLectureIntoBuffer(prev, latest, strategyConfig.historyLimit),
+    );
 
     const dt = 1;
     const powerW = latest.voltage_battery * latest.current;
@@ -283,7 +299,14 @@ const DashboardPage = () => {
         console.log(sample);
       });
     }
-  }, [WHEEL_DIAMETER_M, gearRatio, raceStartTime, showDashboard, isRunning]);
+  }, [
+    WHEEL_DIAMETER_M,
+    gearRatio,
+    raceStartTime,
+    showDashboard,
+    isRunning,
+    strategyConfig.historyLimit,
+  ]);
 
   const handleMaxLapsChange = (value) => {
     if (!canControl) return;
@@ -296,6 +319,7 @@ const DashboardPage = () => {
 
   const resetConsumptionStats = useCallback(() => {
     setDataHistory([]);
+    setTelemetryBuffer([]);
     setTotalAh(0);
     setTotalKm(0);
     setTotalWh(0);
@@ -304,6 +328,13 @@ const DashboardPage = () => {
     setRpms(0);
     setThrottle(0);
     lastProcessedLectureKeyRef.current = null;
+  }, []);
+
+  const handleStrategyConfigChange = useCallback((nextPartialConfig) => {
+    setStrategyConfig((previousConfig) => ({
+      ...previousConfig,
+      ...nextPartialConfig,
+    }));
   }, []);
 
   const syncRaceState = useCallback((state) => {
@@ -377,6 +408,58 @@ const DashboardPage = () => {
     socket.on("telemetry:new-lecture", handleTelemetryLecture);
     return () => socket.off("telemetry:new-lecture", handleTelemetryLecture);
   }, [processIncomingLecture]);
+
+  useEffect(() => {
+    if (!isRunning && !isPaused) {
+      return undefined;
+    }
+
+    let ignore = false;
+
+    const fetchLiveBuffer = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE}/lectures/live-buffer?limit=${strategyConfig.historyLimit}`,
+        );
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data) || ignore) {
+          return;
+        }
+
+        setTelemetryBuffer((prev) =>
+          mergeLectureCollections(prev, data, strategyConfig.historyLimit),
+        );
+      } catch (error) {
+        console.warn("Live telemetry buffer unavailable:", error);
+      }
+    };
+
+    fetchLiveBuffer();
+
+    return () => {
+      ignore = true;
+    };
+  }, [API_BASE, isRunning, isPaused, strategyConfig.historyLimit]);
+
+  useEffect(() => {
+    const latestSample = telemetryHistory[telemetryHistory.length - 1];
+    if (!latestSample) {
+      return;
+    }
+
+    const ampHours = telemetryHistory.reduce(
+      (sum, sample) => sum + ((Number(sample.lecture?.current) || 0) * sample.dtSeconds) / 3600,
+      0,
+    );
+
+    setTotalWh(latestSample.energyWh);
+    setTotalKm(latestSample.distanceKm);
+    setTotalAh(ampHours);
+  }, [telemetryHistory]);
 
   useEffect(() => {
     // Pedir datos al cargar por primera vez
@@ -891,7 +974,7 @@ const DashboardPage = () => {
           <motion.div
             className="
               min-h-screen
-              flex flex-col md:flex-row
+              flex flex-col
               bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_right,rgba(251,146,60,0.08),transparent_30%),#08111f] text-white z-0 relative
               p-[clamp(0.4rem,1vw,1rem)]
               gap-[clamp(0.4rem,1vw,0.75rem)]
@@ -900,134 +983,143 @@ const DashboardPage = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 3.2, ease: "easeOut" }}
           >
-            {/* Battery: arriba en móvil (horizontal), izquierda en md (vertical si quieres) */}
-            <div
-              className="
-                flex-none
-                w-full h-[7vh]
-                md:w-16 md:h-auto
-                rounded-xl p-1
-              "
-            >
-              {/* móvil: horizontal */}
-              <div className="w-full h-full md:hidden">
-                <Battery percentage={100 * voltage_battery / 51} orientation="horizontal" />
+            <div className="flex flex-col gap-[clamp(0.4rem,1vw,0.75rem)] md:flex-row">
+              {/* Battery: arriba en móvil (horizontal), izquierda en md (vertical si quieres) */}
+              <div
+                className="
+                  flex-none
+                  w-full h-[7vh]
+                  md:w-16 md:h-auto
+                  rounded-xl p-1
+                "
+              >
+                {/* móvil: horizontal */}
+                <div className="w-full h-full md:hidden">
+                  <Battery percentage={100 * voltage_battery / 51} orientation="horizontal" />
+                </div>
+
+                {/* md+: vertical */}
+                <div className="hidden md:block w-full h-full">
+                  <Battery percentage={100 * voltage_battery / 51} orientation="vertical" />
+                </div>
               </div>
 
-              {/* md+: vertical */}
-              <div className="hidden md:block w-full h-full">
-                <Battery percentage={100 * voltage_battery / 51} orientation="vertical" />
-              </div>
-            </div>
-
-            {/* Contenido principal: en móvil se apila, en md se pone en fila */}
-            <div className="flex-1 flex flex-col md:flex-row gap-[clamp(0.4rem,1vw,0.75rem)] min-w-0">
-              {/* Panel principal */}
-              <div className="w-full max-w-full flex-[1.4] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
-                <div className="flex-1 m-2 flex flex-col lg:flex-row min-w-0">
-                  <div className="flex-col content-center">
-                    <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
-                      <Speedometer
-                        speed={Math.sqrt(velocity_x ** 2 + velocity_y ** 2)}
-                      />
+              {/* Contenido principal: en móvil se apila, en md se pone en fila */}
+              <div className="flex-1 flex flex-col md:flex-row gap-[clamp(0.4rem,1vw,0.75rem)] min-w-0">
+                {/* Panel principal */}
+                <div className="w-full max-w-full flex-[1.4] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
+                  <div className="flex-1 m-2 flex flex-col lg:flex-row min-w-0">
+                    <div className="flex-col content-center">
+                      <div className="flex-[3] rounded-xl m-1 flex justify-center items-center min-w-0">
+                        <Speedometer
+                          speed={currentSpeedKph}
+                        />
+                      </div>
+                      <div className="flex justify-center">
+                        <Throttle
+                          percentage={throttle}
+                        />
+                      </div>
                     </div>
-                    <div className="flex justify-center">
-                      <Throttle
-                        percentage={throttle}
+
+                    <div className="flex-[2] rounded-xl m-1 min-w-0">
+                      <PerformanceTable
+                        current={current}
+                        voltage={voltage_battery}
+                        rpms={rpm_motor}
+                        totalConsumption={totalWh.toFixed(2)}
+                        efficiency={kmPerKWh.toFixed(2)}
+                        distance={totalKm.toFixed(3)}
+                        ampHours={totalAh.toFixed(2)}
+                        whPerKm={whPerKm.toFixed(2)}
+                        air_density={airDensity.toFixed(2)}
                       />
                     </div>
                   </div>
 
-                  <div className="flex-[2] rounded-xl m-1 min-w-0">
-                    <PerformanceTable
-                      current={current}
-                      voltage={voltage_battery}
-                      rpms={rpm_motor}
-                      totalConsumption={totalWh.toFixed(2)}
-                      efficiency={kmPerKWh.toFixed(2)}
-                      distance={totalKm.toFixed(3)}
-                      ampHours={totalAh.toFixed(2)}
-                      whPerKm={whPerKm.toFixed(2)}
-                      air_density={airDensity.toFixed(2)}
+                  <div className="m-2 rounded-xl flex flex-col lg:flex-row min-w-0">
+                    <div className="flex-[2] rounded-xl m-1 min-w-0">
+                      <VoltageCurrentChart dataHistory={dataHistory} />
+                    </div>
+                    <div className="flex-[1] rounded-xl m-1 min-w-0">
+                      <IMUdata
+                        roll={roll}
+                        pitch={pitch}
+                        yaw={yaw}
+                        accel_x={acceleration_x}
+                        accel_y={acceleration_y}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel mapa + stats */}
+                <div className="w-full max-w-full flex-[1.8] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
+                  <div className="h-[400px] md:flex-[1.25] md:h-auto rounded-xl m-2 min-h-[260px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
+                    <MapGPS latitude={latitude} longitud={longitud} />
+                  </div>
+                  <div className="rounded-xl m-2 border border-slate-700/60 bg-[#0F1A2E] px-3 py-2.5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-200 sm:grid-cols-3 lg:flex-1">
+                        <div>Temp: {weatherData?.current ? formatValueWithUnit(weatherData.current.temperature_2m, ' C') : '--'}</div>
+                        <div>Humidity: {weatherData?.current ? formatValueWithUnit(weatherData.current.relative_humidity_2m, '%') : '--'}</div>
+                        <div>Precip. Prob. (next 2h): {weatherData?.current ? formatValueWithUnit(weatherData.current.precipitation_probability, '%') : '--'}</div>
+                        <div>Weather: {weatherData?.current?.weather_code_description ?? '--'}</div>
+                        <div>Visibility: {weatherData?.current ? formatValueWithUnit(weatherData.current.visibility, ' m') : '--'}</div>
+                        <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
+                      </div>
+                      <button
+                        onClick={handleFetchWeather}
+                        disabled={!canControl || weatherLoading}
+                        className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 lg:self-end ${!canControl || weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      >
+                        {weatherLoading ? 'Updating...' : 'Get Current Weather'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 rounded-xl m-2 min-w-0">
+                    <RaceStats
+                      canControl={canControl}
+                      onStart={handleStart}
+                      onPauseToggle={handlePauseToggle}
+                      isPaused={isPaused}
+                      onReset={handleReset}
+                      onSave={handleSave}
+                      onNewLap={handleNewLap}
+                      onDeleteLastLap={handleDeleteLastLap}
+                      maxLaps={maxLaps}
+                      onMaxLapsChange={handleMaxLapsChange}
+                      maxLapOptions={MAX_LAP_OPTIONS}
+                      canCreateNewLap={lapsNumber < maxLaps}
+                      canDeleteLastLap={laps.length > 0}
+                      onNewConfig={handleSettingsUpdate}
+                      onNewMssage={handleNewMessage}
+                      onToggleIngestion={handleToggleIngestion}
+                      ingestionEnabled={ingestionEnabled}
+                      ingestionLoading={ingestionLoading}
+                      running_time={formatDuration(runningTime)}
+                      currentLapTime={formatDuration(currentLapTime)}
+                      laps={laps}
+                      average_time={formatDuration(averageLapTime)}
+                      current_lap={lapsNumber}
+                      remaining_time={formatDuration(remaining_time)}
+                      altitude={altitude}
+                      num_sats={numberOfSatellites}
+                      airSpeed={Number(airSpeed) || 0}
+                      ambient_temp={ambient_temp}
                     />
                   </div>
                 </div>
-
-                <div className="m-2 rounded-xl flex flex-col lg:flex-row min-w-0">
-                  <div className="flex-[2] rounded-xl m-1 min-w-0">
-                    <VoltageCurrentChart dataHistory={dataHistory} />
-                  </div>
-                  <div className="flex-[1] rounded-xl m-1 min-w-0">
-                    <IMUdata
-                      roll={roll}
-                      pitch={pitch}
-                      yaw={yaw}
-                      accel_x={acceleration_x}
-                      accel_y={acceleration_y}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel mapa + stats */}
-              <div className="w-full max-w-full flex-[1.8] rounded-2xl border border-slate-700/60 bg-[#0D1526]/95 shadow-[0_22px_50px_rgba(2,6,23,0.45)] flex flex-col min-w-0 overflow-hidden">
-                <div className="h-[400px] md:flex-[1.25] md:h-auto rounded-xl m-2 min-h-[260px] overflow-hidden border border-slate-700/60 bg-[#0F1A2E]">
-                  <MapGPS latitude={latitude} longitud={longitud} />
-                </div>
-                <div className="rounded-xl m-2 border border-slate-700/60 bg-[#0F1A2E] px-3 py-2.5">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-200 sm:grid-cols-3 lg:flex-1">
-                      <div>Temp: {weatherData?.current ? formatValueWithUnit(weatherData.current.temperature_2m, ' C') : '--'}</div>
-                      <div>Humidity: {weatherData?.current ? formatValueWithUnit(weatherData.current.relative_humidity_2m, '%') : '--'}</div>
-                      <div>Precip. Prob. (next 2h): {weatherData?.current ? formatValueWithUnit(weatherData.current.precipitation_probability, '%') : '--'}</div>
-                      <div>Weather: {weatherData?.current?.weather_code_description ?? '--'}</div>
-                      <div>Visibility: {weatherData?.current ? formatValueWithUnit(weatherData.current.visibility, ' m') : '--'}</div>
-                      <div>TZ: {weatherData?.metadata?.timezoneAbbreviation ?? '--'}</div>
-                    </div>
-                    <button
-                      onClick={handleFetchWeather}
-                      disabled={!canControl || weatherLoading}
-                      className={`rounded-lg border border-sky-400/20 bg-[#162133] px-3 py-2 text-xs font-semibold text-sky-200 lg:self-end ${!canControl || weatherLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    >
-                      {weatherLoading ? 'Updating...' : 'Get Current Weather'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 rounded-xl m-2 min-w-0">
-                  <RaceStats
-                    canControl={canControl}
-                    onStart={handleStart}
-                    onPauseToggle={handlePauseToggle}
-                    isPaused={isPaused}
-                    onReset={handleReset}
-                    onSave={handleSave}
-                    onNewLap={handleNewLap}
-                    onDeleteLastLap={handleDeleteLastLap}
-                    maxLaps={maxLaps}
-                    onMaxLapsChange={handleMaxLapsChange}
-                    maxLapOptions={MAX_LAP_OPTIONS}
-                    canCreateNewLap={lapsNumber < maxLaps}
-                    canDeleteLastLap={laps.length > 0}
-                    onNewConfig={handleSettingsUpdate}
-                    onNewMssage={handleNewMessage}
-                    onToggleIngestion={handleToggleIngestion}
-                    ingestionEnabled={ingestionEnabled}
-                    ingestionLoading={ingestionLoading}
-                    running_time={formatDuration(runningTime)}
-                    currentLapTime={formatDuration(currentLapTime)}
-                    laps={laps}
-                    average_time={formatDuration(averageLapTime)}
-                    current_lap={lapsNumber}
-                    remaining_time={formatDuration(remaining_time)}
-                    altitude={altitude}
-                    num_sats={numberOfSatellites}
-                    airSpeed={Number(airSpeed) || 0}
-                    ambient_temp={ambient_temp}
-                  />
-                </div>
               </div>
             </div>
+
+            <RaceStrategyPanel
+              strategy={strategyRecommendation}
+              strategyConfig={strategyConfig}
+              onStrategyConfigChange={handleStrategyConfigChange}
+              canControl={canControl}
+            />
           </motion.div>
         </>
       )}
